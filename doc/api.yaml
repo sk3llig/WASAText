@@ -1,273 +1,887 @@
-openapi: 3.0.0
-servers:
-  - url: "http://localhost:3000"
+openapi: 3.0.3
 info:
-  title: Fantastic Coffee (decaffeinated)
-  description: Fantastic Coffee (decaffeinated), the skeleton project for Web and Software architecture course
-  version: 1.0.0
+  title: WASAText API
+  description: >
+    OpenAPI definition for the WASAText messaging platform.
+    The system allows users to send messages (one-to-one and group),
+    manage profiles, and interact with conversations.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+# Global security: use Bearer identifier returned by /session
+security:
+  - BearerAuth: []
+
 paths:
-  /status:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-    get:
-      tags: ["General"]
-      operationId: getStatusMessage
-      summary: Get status message for the user about issues / updates
-      description: |-
-        The response contains a status message meant for the user. It might
-        contains information about current technical issues, update messages
-        or general information.
+  # =====================
+  # Authentication
+  # =====================
+  /session:
+    post:
+      tags: ["login"]
+      summary: Login or register a user
+      description: >
+        Simplified login: if the user exists, returns its identifier;
+        otherwise, creates a new user and returns the identifier.
+      operationId: doLogin
+      security: []   # public endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        "200":
-          description: Status message available
+        "201":
+          description: User login successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StatusInfo"
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Invalid request
 
-  /:
+  # =====================
+  # Profile Management (for the authenticated user)
+  # =====================
+  /me:
     get:
-      tags: ["Group 1"]
-      operationId: index
-      summary: Get an index
-      description: |-
-        This is an example of an index API description
+      tags: ["profile"]
+      summary: Get my profile information
+      operationId: getMyProfile
       responses:
         "200":
-          description: Successful
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-  /context:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-    post:
-      tags: ["Group 1"]
-      operationId: getContext
-      summary: Another API example
-      description: |-
-        Example description 2
-      responses:
-        "200":
-          description: Request ok
-          headers:
-            X-Access-Token:
-              description: Access token for authenticated requests
-              schema: { type: string }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-  /authenticated:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-    get:
-      tags: ["Group 2"]
-      operationId: getAuthenticatedExample
-      summary: Get an endpoint with authentication
-      description: |-
-        Get an endpoint with auth
-      security:
-        - LegacyAuth: []
-        - AppToken: []
-      responses:
-        "200":
-          description: Logout successful
-        "500": { $ref: "#/components/responses/InternalServerError" }
-
-  /pictures/{cat}:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-      - $ref: "#/components/parameters/cat"
-    get:
-      tags: ["Cat pictures"]
-      operationId: getCatFromPicture
-      summary: Example of a parameter in URL
-      description: |-
-        Example of a parameter in URL
-      security:
-        - LegacyAuth: []
-      responses:
-        "200":
-          description: Student picture found
+          description: Current user profile
           content:
-            image/png:
+            application/json:
               schema:
-                type: string
-                format: binary
-              example: Picture binary file
-        "404":
-          description: Student picture not found
-        "500": { $ref: "#/components/responses/InternalServerError" }
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
 
-
-  /autofeeder/{cat}:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-      - $ref: "#/components/parameters/cat"
+  /me/name:
     put:
-      tags: ["Autofeeder"]
-      operationId: createCatAutofeeder
-      summary: Example of PUT operation
-      security:
-        - LegacyAuth: []
-      responses:
-        "200":
-          description: Auto feed enabled
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-    delete:
-      tags: ["Autofeeder"]
-      operationId: deleteCatAutofeeder
-      summary: Example of DELETE operation
-      security:
-        - LegacyAuth: []
-      responses:
-        "200":
-          description: Auto feed disabled
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-
-  /session/login:
-    parameters:
-      - $ref: "#/components/parameters/XAppBuild"
-      - $ref: "#/components/parameters/XAppVersion"
-      - $ref: "#/components/parameters/XAppLanguage"
-      - $ref: "#/components/parameters/XAppPlatform"
-    post:
-      tags: ["Session management"]
-      operationId: login
-      summary: Log-in into system
-      description: |-
-        Perform a log-in action using username and password credentials.
-        Returns a token which can be used in authenticated requests.
+      tags: ["profile"]
+      summary: Update my username
+      operationId: setMyUserName
       requestBody:
+        required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              type: object
-              properties:
-                userid:
-                  type: string
-                  pattern: '^[a-zA-Z0-9]+$'
-                  minLength: 3
-                  maxLength: 255
-                password:
-                  type: string
-                  pattern: '^.*?$'
-                  minLength: 8
-                  maxLength: 255
+              $ref: "#/components/schemas/SetUserNameRequest"
       responses:
         "200":
-          description: Login successful
-          headers:
-            X-Access-Token:
-              description: Access token for authenticated requests
-              schema: { type: string }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "403":
-          description: Login failed
-          headers:
-            X-Message:
-              description: Error message
-              schema: { type: string }
-        "500": { $ref: "#/components/responses/InternalServerError" }
+          description: Username updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request
+        "409":
+          description: Username already in use
+        "401":
+          description: Unauthorized
 
+  /me/photo:
+    put:
+      tags: ["profile"]
+      summary: Update my profile photo
+      operationId: setMyPhoto
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SetPhotoRequest"
+      responses:
+        "200":
+          description: Profile photo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+
+  /me/conversations:
+    get:
+      tags: ["conversations"]
+      summary: Retrieve all my conversations (reverse chronological)
+      operationId: getMyConversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+        "401":
+          description: Unauthorized
+
+  /me/groups:
+    get:
+      tags: ["groups"]
+      summary: Retrieve all groups the authenticated user belongs to
+      operationId: getMyGroups
+      responses:
+        "200":
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+        "401":
+          description: Unauthorized
+
+  # =====================
+  # Conversations
+  # =====================
+  /conversations:
+    post:
+      tags: ["conversations"]
+      summary: Create a new conversation (1-to-1 or group)
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversationRequest"
+      responses:
+        "201":
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+
+  /conversations/{conversationId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        description: Conversation identifier
+        schema:
+          type: string
+    get:
+      tags: ["conversations"]
+      summary: Get details and messages of a conversation
+      operationId: getConversation
+      responses:
+        "200":
+          description: Conversation details with messages (reverse chronological)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationDetails"
+        "404":
+          description: Conversation not found
+        "401":
+          description: Unauthorized
+    delete:
+      tags: ["conversations"]
+      summary: Leave the conversation (or delete if owner)
+      operationId: deleteConversation
+      description: >
+        Authenticated user leaves the conversation. For private 1-to-1 conversation this removes it from user's list;
+        for groups it removes the member. If the implementation includes an owner/admin delete action, it may delete the conversation entirely.
+      responses:
+        "200":
+          description: Left conversation successfully
+        "401":
+          description: Unauthorized
+        "404":
+          description: Conversation not found
+        "403":
+          description: Forbidden
+
+  # =====================
+  # Messages (belonging to a conversation)
+  # =====================
+  /conversations/{conversationId}/messages:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        description: Conversation identifier
+        schema:
+          type: string
+    post:
+      tags: ["messages"]
+      summary: Send a new message in a conversation (or reply)
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: Conversation not found
+        '401':
+          description: Unauthorized
+    get:
+      tags: ["messages"]
+      summary: Get all messages in a conversation (reverse chronological)
+      operationId: getConversationMessages
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '404':
+          description: Conversation not found
+        '401':
+          description: Unauthorized
+
+  /conversations/{conversationId}/messages/{messageId}/forward:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: ["messages"]
+      summary: Forward a message to another conversation (single or multiple targets)
+      operationId: forwardMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForwardMessageRequest"
+      responses:
+        "201":
+          description: Message forwarded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Conversation or message not found
+        "401":
+          description: Unauthorized
+
+  /conversations/{conversationId}/messages/{messageId}/reactions:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: ["messages"]
+      summary: Add a reaction (comment) to a message
+      operationId: commentMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentRequest"
+      responses:
+        "201":
+          description: Reaction added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reaction"
+        "404":
+          description: Message not found
+        "401":
+          description: Unauthorized
+    delete:
+      tags: ["messages"]
+      summary: Remove the authenticated user's reaction from a message
+      operationId: uncommentMessage
+      parameters:
+        - name: emoji
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional emoji to remove; if omitted removes user's last reaction
+      responses:
+        "200":
+          description: Reaction removed
+        "404":
+          description: Reaction or message not found
+        "401":
+          description: Unauthorized
+
+  /conversations/{conversationId}/messages/{messageId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      tags: ["messages"]
+      summary: Delete one of my messages
+      operationId: deleteMessage
+      responses:
+        "200":
+          description: Message deleted successfully
+        "403":
+          description: Not allowed to delete this message
+        "404":
+          description: Message not found
+        "401":
+          description: Unauthorized
+    get:
+      tags: ["messages"]
+      summary: Get a single message
+      operationId: getMessage
+      responses:
+        "200":
+          description: Message retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Message not found
+        "401":
+          description: Unauthorized
+
+  # =====================
+  # Groups
+  # =====================
+  /groups:
+    post:
+      tags: ["groups"]
+      summary: Create a new group
+      operationId: createGroup
+      description: Creates a new group with the specified members and name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Invalid request (e.g. missing name or members)
+        '401':
+          description: Unauthorized
+    get:
+      tags: ["groups"]
+      summary: Retrieve groups visible (or all, depending on policies). Typically backend filters to groups of user.
+      operationId: listGroups
+      responses:
+        "200":
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+        "401":
+          description: Unauthorized
+
+  /groups/{groupId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: ID of the group
+        schema:
+          type: string
+    get:
+      tags: ["groups"]
+      summary: Get group details
+      operationId: getGroup
+      responses:
+        "200":
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          description: Group not found
+        "401":
+          description: Unauthorized
+    delete:
+      tags: ["groups"]
+      summary: Delete group (admin/owner only)
+      operationId: deleteGroup
+      responses:
+        "200":
+          description: Group deleted
+        "403":
+          description: Forbidden
+        "401":
+          description: Unauthorized
+
+  /groups/{groupId}/members:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: ID of the group
+        schema:
+          type: string
+    get:
+      tags: ["groups"]
+      summary: List group members
+      operationId: listGroupMembers
+      responses:
+        "200":
+          description: Members list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "404":
+          description: Group not found
+        "401":
+          description: Unauthorized
+    post:
+      tags: ["groups"]
+      summary: Add a user to the group
+      operationId: addToGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddToGroupRequest"
+      responses:
+        "200":
+          description: User added to group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          description: Group not found
+        "401":
+          description: Unauthorized
+
+  /groups/{groupId}/members/me:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: ID of the group
+        schema:
+          type: string
+    delete:
+      tags: ["groups"]
+      summary: Leave a group (authenticated user)
+      operationId: leaveGroup
+      responses:
+        "200":
+          description: Left group successfully
+        "404":
+          description: Group not found
+        "401":
+          description: Unauthorized
+
+  /groups/{groupId}/name:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: ID of the group
+        schema:
+          type: string
+    put:
+      tags: ["groups"]
+      summary: Change group name
+      operationId: setGroupName
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetGroupNameRequest"
+      responses:
+        "200":
+          description: Group name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          description: Group not found
+        "409":
+          description: Name already in use
+        "401":
+          description: Unauthorized
+
+  /groups/{groupId}/photo:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: ID of the group
+        schema:
+          type: string
+    put:
+      tags: ["groups"]
+      summary: Update group photo
+      operationId: setGroupPhoto
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SetPhotoRequest"
+      responses:
+        "200":
+          description: Group photo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          description: Group not found
+        "401":
+          description: Unauthorized
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: "Identifier"
+
   schemas:
-    StatusInfo:
-      title: Status Info
+    # -----------------------
+    # Authentication
+    # -----------------------
+    LoginRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 16
+          example: Maria
+
+    LoginResponse:
       type: object
       properties:
+        identifier:
+          type: string
+          example: "abcdef012345"
+
+    # -----------------------
+    # User / Profile
+    # -----------------------
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user_123"
+        name:
+          type: string
+          example: "Maria Rossi"
+        photoUrl:
+          type: string
+          format: uri
+          example: "https://example.com/photos/user_123.jpg"
+
+    SetUserNameRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 32
+          example: "NuovoNome"
+
+    SetPhotoRequest:
+      type: object
+      properties:
+        photo:
+          type: string
+          format: binary
+          description: "Binary file upload (multipart/form-data)"
+
+    # -----------------------
+    # Conversations & Messages
+    # -----------------------
+    CreateConversationRequest:
+      type: object
+      properties:
+        participantIds:
+          type: array
+          items:
+            type: string
+          description: IDs of the users to include in the conversation
+        isGroup:
+          type: boolean
+          description: True if the conversation is a group chat
+        groupName:
+          type: string
+          description: Optional name of the group
+      required:
+        - participantIds
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "conv_abc123"
+        name:
+          type: string
+          nullable: true
+          example: "Amici del corso"
+        isGroup:
+          type: boolean
+          example: false
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/photos/group_1.jpg"
+        lastMessage:
+          type: string
+          nullable: true
+          example: "Ciao, a che ora ci vediamo?"
+        lastMessageTime:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-10-30T18:05:00Z"
+
+    ConversationDetails:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        isGroup:
+          type: boolean
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "msg_001"
+        conversationId:
+          type: string
+          example: "conv_abc123"
+        sender:
+          $ref: "#/components/schemas/User"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-10-30T18:10:00Z"
+        content:
+          type: string
+          nullable: true
+          example: "Ciao!"
+        replyTo:
+          type: string
+          nullable: true
+          description: "ID of the message being replied to (if any)"
+        type:
+          type: string
+          enum: ["text", "photo"]
+          example: "text"
+        attachments:
+          type: array
+          items:
+            type: string
+            example: "https://example.com/attachments/att1.jpg"
         status:
           type: string
-          enum:
-            - info
-            - warning
-            - critical
-            - ""
-        title: { type: string }
-        message: { type: string }
-        url: { type: string }
+          enum: ["sent", "received", "read"]
+          example: "sent"
+        reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reaction"
 
-  responses:
-    Unauthorized:
-      description: The access token is missing or it's expired
-    BadRequest:
-      description: The request was not compliant with the documentation (eg. missing fields, etc)
-    InternalServerError:
-      description: The server encountered an internal error. Further info in server logs
+    Reaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "r_01"
+        emoji:
+          type: string
+          example: "👍"
+        user:
+          $ref: "#/components/schemas/User"
 
-  securitySchemes:
-    LegacyAuth:
-      type: apiKey
-      in: header
-      name: X-App-Token
-      description: |-
-        App session token value. This value is sent by the server in the login
-        and session refresh APIs.
+    # -----------------------
+    # Requests for message operations
+    # -----------------------
+    SendMessageRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          example: "Ciao, come va?"
+        replyTo:
+          type: string
+          nullable: true
+          description: "Optional message ID being replied to"
+        attachments:
+          type: array
+          items:
+            type: string
+            example: "https://example.com/attachments/att1.jpg"
 
-  parameters:
-    XAppVersion:
-      schema:
-        type: string
-        pattern: '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
-        minLength: 1
-        maxLength: 10
-      name: X-App-Version
-      in: header
-      required: true
-      description: App human readable version ("semantic version" format)
-      allowEmptyValue: false
-    XAppBuild:
-      schema: { type: integer }
-      name: X-App-Build
-      in: header
-      required: true
-      description: App build number
-      allowEmptyValue: false
-    XAppLanguage:
-      schema:
-        type: string
-        pattern: '^[a-z]{2}([-_][A-Z]{2})?$'
-        minLength: 2
-        maxLength: 5
-      name: X-App-Language
-      in: header
-      required: true
-      description: App language in ISO 639-1 format
-      allowEmptyValue: false
-    XAppPlatform:
-      schema:
-        type: string
-        enum: [ios, android]
-      name: X-App-Platform
-      in: header
-      required: true
-      description: App operating system / platform
-      allowEmptyValue: false
-    cat:
-      schema:
-        type: string
-        pattern: '^[a-zA-Z]+$'
-        minLength: 3
-        maxLength: 10
-      name: cat
-      in: path
-      required: true
-      description: Cat
-      allowEmptyValue: false
+    ForwardMessageRequest:
+      type: object
+      required:
+        - targetConversationId
+      properties:
+        targetConversationId:
+          type: string
+          description: ID of the conversation where the message is forwarded
+          example: "conv_target_456"
+        comment:
+          type: string
+          nullable: true
+          description: "Optional comment to add while forwarding"
+
+    CommentRequest:
+      type: object
+      required:
+        - emoji
+      properties:
+        emoji:
+          type: string
+          example: "😀"
+
+    # -----------------------
+    # Groups
+    # -----------------------
+    CreateGroupRequest:
+      type: object
+      required:
+        - name
+        - members
+      properties:
+        name:
+          type: string
+          example: "Gruppo amici università"
+        members:
+          type: array
+          items:
+            type: string
+          description: "List of user identifiers to add to the group"
+          example: ["user123", "user456"]
+
+    AddToGroupRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          example: "user_456"
+
+    SetGroupNameRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Amici del corso"
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "group789"
+        name:
+          type: string
+          example: "Gruppo amici università"
+        members:
+          type: array
+          items:
+            type: string
+          example: ["user123", "user456", "user789"]
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/photos/group_1.jpg"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-10-30T18:05:00Z"
+
