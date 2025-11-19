@@ -36,7 +36,7 @@ paths:
       description: >
         Simplified login: if the user exists, returns its identifier;
         otherwise, creates a new user and returns the identifier.
-      operationId: do_login
+      operationId: doLogin
       security: []   # public endpoint
       requestBody:
         required: true
@@ -75,7 +75,7 @@ paths:
       tags: ["profile"]
       summary: Get my profile information
       description: Returns the profile of the authenticated user.
-      operationId: get_my_profile
+      operationId: getMyProfile
       responses:
         "200":
           description: Current user profile
@@ -108,7 +108,7 @@ paths:
       tags: ["profile"]
       summary: Update my username
       description: Update the display name of the authenticated user.
-      operationId: set_my_user_name
+      operationId: setMyUserName
       requestBody:
         required: true
         content:
@@ -156,7 +156,7 @@ paths:
       tags: ["profile"]
       summary: Update my profile photo
       description: Upload or update the authenticated user's profile photo.
-      operationId: set_my_photo
+      operationId: setMyPhoto
       requestBody:
         required: true
         content:
@@ -193,7 +193,7 @@ paths:
       tags: ["conversations"]
       summary: Retrieve my conversations
       description: Returns the authenticated user's conversations in reverse chronological order.
-      operationId: get_my_conversations
+      operationId: getMyConversations
       responses:
         "200":
           description: List of conversations
@@ -223,7 +223,7 @@ paths:
       tags: ["groups"]
       summary: Retrieve my groups
       description: Returns groups the authenticated user belongs to.
-      operationId: get_my_groups
+      operationId: getMyGroups
       responses:
         "200":
           description: List of groups
@@ -252,7 +252,7 @@ paths:
       tags: ["conversations"]
       summary: Create a new conversation
       description: Create a private 1-to-1 or a group conversation depending on payload.
-      operationId: create_conversation
+      operationId: createConversation
       requestBody:
         required: true
         content:
@@ -307,7 +307,7 @@ paths:
       tags: ["conversations"]
       summary: Get conversation details
       description: Get details and messages of a conversation (most recent first).
-      operationId: get_conversation
+      operationId: getConversation
       responses:
         "200":
           description: Conversation details with messages
@@ -344,7 +344,7 @@ paths:
       description: >
         Authenticated user leaves the conversation. For 1-to-1 conversations it removes it from user's list.
         For groups it removes the member. Owner/admin behavior may delete the conversation entirely.
-      operationId: delete_conversation
+      operationId: deleteConversation
       responses:
         "200":
           description: Left conversation successfully
@@ -392,7 +392,7 @@ paths:
       tags: ["messages"]
       summary: Send a new message
       description: Send a message in a conversation or reply to an existing message.
-      operationId: send_message
+      operationId: sendMessage
       requestBody:
         required: true
         content:
@@ -436,7 +436,7 @@ paths:
       tags: ["messages"]
       summary: List messages in a conversation
       description: Returns messages in a conversation in reverse chronological order.
-      operationId: get_conversation_messages
+      operationId: getConversationMessages
       parameters:
         - name: limit
           in: query
@@ -509,7 +509,7 @@ paths:
       tags: ["messages"]
       summary: Forward a message
       description: Forward a message to one or more target conversations, with optional comment.
-      operationId: forward_message
+      operationId: forwardMessage
       requestBody:
         required: true
         content:
@@ -568,7 +568,7 @@ paths:
       tags: ["messages"]
       summary: Add a reaction to a message
       description: Add a reaction (emoji) to a given message.
-      operationId: comment_message
+      operationId: commentMessage
       requestBody:
         required: true
         content:
@@ -606,7 +606,7 @@ paths:
       tags: ["messages"]
       summary: Remove a reaction
       description: Remove the authenticated user's reaction. If `emoji` is provided, remove that emoji only.
-      operationId: uncomment_message
+      operationId: uncommentMessage
       parameters:
         - name: emoji
           in: query
@@ -658,7 +658,7 @@ paths:
       tags: ["messages"]
       summary: Delete one of my messages
       description: Delete a message authored by the authenticated user (if permitted).
-      operationId: delete_message
+      operationId: deleteMessage
       responses:
         "200":
           description: Message deleted successfully
@@ -688,7 +688,7 @@ paths:
       tags: ["messages"]
       summary: Get a single message
       description: Retrieve a single message by id.
-      operationId: get_message
+      operationId: getMessage
       responses:
         "200":
           description: Message retrieved
@@ -725,7 +725,7 @@ paths:
       tags: ["groups"]
       summary: Create a new group
       description: Creates a new group with the specified members and name.
-      operationId: create_group
+      operationId: createGroup
       requestBody:
         required: true
         content:
@@ -767,7 +767,7 @@ paths:
       tags: ["groups"]
       summary: Retrieve groups
       description: Returns groups visible to the authenticated user.
-      operationId: list_groups
+      operationId: listGroups
       responses:
         "200":
           description: List of groups
@@ -802,7 +802,7 @@ paths:
     get:
       tags: ["groups"]
       summary: Get group details
-      operationId: get_group
+      operationId: getGroup
       description: Retrieve detailed information about a group.
       responses:
         "200":
@@ -834,7 +834,7 @@ paths:
       tags: ["groups"]
       summary: Delete group
       description: Delete a group (admin/owner only).
-      operationId: delete_group
+      operationId: deleteGroup
       responses:
         "200":
           description: Group deleted
@@ -869,7 +869,7 @@ paths:
     get:
       tags: ["groups"]
       summary: List group members
-      operationId: list_group_members
+      operationId: listGroupMembers
       responses:
         "200":
           description: Members list
@@ -899,7 +899,7 @@ paths:
       tags: ["groups"]
       summary: Add a user to the group
       description: Add a user to an existing group.
-      operationId: add_to_group
+      operationId: addToGroup
       requestBody:
         required: true
         content:
@@ -945,7 +945,7 @@ paths:
       tags: ["groups"]
       summary: Leave a group
       description: Authenticated user leaves the specified group.
-      operationId: leave_group
+      operationId: leaveGroup
       responses:
         "200":
           description: Left group successfully
@@ -980,7 +980,7 @@ paths:
     put:
       tags: ["groups"]
       summary: Change group name
-      operationId: set_group_name
+      operationId: setGroupName
       requestBody:
         required: true
         content:
@@ -1031,7 +1031,7 @@ paths:
     put:
       tags: ["groups"]
       summary: Update group photo
-      operationId: set_group_photo
+      operationId: setGroupPhoto
       requestBody:
         required: true
         content:
