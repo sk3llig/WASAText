@@ -69,6 +69,34 @@ paths:
                     errors: []
                     trace: ""
 
+  /images:
+    post:
+      tags: [ "media" ]
+      summary: Carica un'immagine
+      description: Carica un file (multipart) e restituisce l'URL da usare nei messaggi o nel profilo.
+      operationId: uploadImage
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Immagine caricata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageMetadata"
+        "400":
+          $ref: "#/components/schemas/Error"
+        "413":
+          description: File troppo grande
+
   # Profile Management
   /me:
     get:
@@ -160,7 +188,7 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json: # <--- ERA multipart/form-data, ORA è application/json
             schema:
               $ref: "#/components/schemas/SetPhotoRequest"
       responses:
@@ -174,7 +202,8 @@ paths:
                 success:
                   value:
                     id: "user_123"
-                    photo_url: "https://example.com/photos/user_123_new.jpg"
+                    name: "Maria"
+                    photo_url: "http://localhost:8080/images/user_123_new.jpg"
         "400":
           description: Invalid request
           content:
@@ -194,6 +223,8 @@ paths:
       summary: Retrieve my conversations
       description: Returns the authenticated user's conversations in reverse chronological order.
       operationId: getMyConversations
+
+
       responses:
         "200":
           description: List of conversations
@@ -623,6 +654,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
+
         "404":
           description: Reaction or message not found
           content:
@@ -666,6 +698,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
+
         "403":
           description: Not allowed to delete this message
           content:
@@ -842,6 +875,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
+
+
         "403":
           description: Forbidden
           content:
@@ -953,6 +988,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
+
+
         "404":
           description: Group not found
           content:
@@ -1035,7 +1072,7 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json: # <--- ERA multipart/form-data, ORA è application/json
             schema:
               $ref: "#/components/schemas/SetPhotoRequest"
       responses:
@@ -1096,6 +1133,8 @@ components:
         errors:
           type: array
           description: A list of detailed error objects (per-field), if any.
+          minItems: 0
+          maxItems: 100
           items:
             type: object
             properties:
@@ -1138,6 +1177,29 @@ components:
           pattern: "^[A-Za-z0-9_-]+$"
           example: "abcdef012345"
 
+    #Image
+    ImageMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier (alphanumeric).
+          minLength: 3
+          maxLength: 64
+          pattern: "^[A-Za-z0-9_-]+$"
+          example: "user_123"
+        url:
+          type: string
+          minLength: 3
+          maxLength: 200
+          format: url
+          description: URL pubblico dell'immagine
+          example: "http://localhost:3000/images/foto.jpg"
+
+        content_type:
+          type: string
+          description: MIME type of the image (e.g., image/jpeg).
+
     # User / Profile
     User:
       type: object
@@ -1176,14 +1238,20 @@ components:
           pattern: "^[A-Za-z0-9_\\- ]{1,32}$"
           example: "NuovoNome"
 
+    #photo request
     SetPhotoRequest:
       type: object
-      description: Multipart payload for photo upload (use multipart/form-data).
+      description: payload dell url immagine
+      required:
+        - photo_url
       properties:
-        photo:
+        photo_url:
           type: string
-          format: binary
-          description: Binary file upload (multipart/form-data)
+          format: url
+          maxLength: 2048
+          description: L'URL dell'immagine ottenuto da /images
+          example: "http://localhost:3000/images/foto.jpg"
+
 
     # Conversations & Messages
     CreateConversationRequest:
@@ -1208,6 +1276,7 @@ components:
           description: Optional name of the group
           minLength: 1
           maxLength: 100
+          pattern: "^.*$"
       required:
         - participant_ids
 
@@ -1252,6 +1321,7 @@ components:
       properties:
         conversations:
           type: array
+          description: List of conversation objects.
           items:
             $ref: "#/components/schemas/Conversation"
           minItems: 0
@@ -1268,8 +1338,10 @@ components:
           maxLength: 64
         name:
           type: string
+          description: Name of the conversation/group.
         is_group:
           type: boolean
+          description: Whether it is a group conversation.
         participants:
           type: array
           items:
@@ -1381,8 +1453,6 @@ components:
     SendMessageRequest:
       type: object
       description: Request payload to send a message in a conversation.
-      required:
-        - content
       properties:
         content:
           type: string
@@ -1398,6 +1468,7 @@ components:
           pattern: "^[A-Za-z0-9_-]+$"
         attachments:
           type: array
+          description: List of attachment URLs.
           items:
             type: string
             format: url
@@ -1422,6 +1493,8 @@ components:
           type: string
           description: Optional comment to add while forwarding
           maxLength: 1000
+          minLength: 0
+          pattern: "^.*$"
 
     CommentRequest:
       type: object
@@ -1434,6 +1507,7 @@ components:
           description: Emoji to add as a reaction
           minLength: 1
           maxLength: 8
+          pattern: "^.+$"
           example: "😀"
 
     # Groups
@@ -1449,6 +1523,7 @@ components:
           description: Name of the new group
           minLength: 1
           maxLength: 100
+          pattern: "^.*$"
           example: "Gruppo amici università"
         members:
           type: array
@@ -1487,6 +1562,7 @@ components:
           description: New group name
           minLength: 1
           maxLength: 100
+          pattern: "^.*$"
           example: "Amici del corso"
 
     Group:
@@ -1534,6 +1610,7 @@ components:
       properties:
         groups:
           type: array
+          description: List of group objects.
           items:
             $ref: "#/components/schemas/Group"
           minItems: 0
@@ -1545,8 +1622,8 @@ components:
       properties:
         members:
           type: array
+          description: List of user objects.
           items:
             $ref: "#/components/schemas/User"
           minItems: 0
           maxItems: 500
-
