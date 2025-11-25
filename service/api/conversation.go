@@ -170,7 +170,13 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 	// 3. Recupero Partecipanti (Serve una query GetGroupMembers o simile)
 	// Nota: Se è 1-to-1 usiamo GetGroupMembers lo stesso, funziona su 'participants'
 	memberIDs, err := rt.db.GetGroupMembers(convID)
-
+	if err != nil {
+		// Logghiamo l'errore ma non blocchiamo tutto (magari torniamo la chat senza membri)
+		// Oppure ritorniamo errore 500. Scegliamo la via sicura (500)
+		rt.baseLogger.WithError(err).Error("Error fetching group members")
+		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Error")
+		return
+	}
 	// Costruzione risposta complessa
 	details := ConversationDetails{
 		ID:           dbConv.ID,

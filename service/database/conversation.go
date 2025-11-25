@@ -16,7 +16,7 @@ func (db *appdbimpl) CreateConversation(c Conversation, participantIDs []string)
 	// Se qualcosa va male, facciamo Rollback alla fine
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 		}
 	}()
 
@@ -77,8 +77,7 @@ func (db *appdbimpl) GetConversationsByUser(userID string) ([]Conversation, erro
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []Conversation
 	for rows.Next() {
