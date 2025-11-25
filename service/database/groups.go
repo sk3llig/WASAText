@@ -47,7 +47,8 @@ func (db *appdbimpl) GetGroupMembers(groupID string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
+	defer rows.Close()
+
 	var members []string
 	for rows.Next() {
 		var uid string

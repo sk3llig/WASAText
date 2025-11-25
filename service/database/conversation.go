@@ -16,9 +16,10 @@ func (db *appdbimpl) CreateConversation(c Conversation, participantIDs []string)
 	// Se qualcosa va male, facciamo Rollback alla fine
 	defer func() {
 		if err != nil {
-			_ = tx.Rollback() // <--- CORREZIONE: Assegna l'errore a _
+			_ = tx.Rollback()
 		}
 	}()
+
 	// 2. Inseriamo la conversazione
 	queryConv := `INSERT INTO conversations (id, name, is_group, photo_url) VALUES (?, ?, ?, ?)`
 	if _, err = tx.Exec(queryConv, c.ID, c.Name, c.IsGroup, c.PhotoURL); err != nil {
@@ -76,7 +77,6 @@ func (db *appdbimpl) GetConversationsByUser(userID string) ([]Conversation, erro
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() { _ = rows.Close() }()
 
 	var res []Conversation
@@ -113,4 +113,17 @@ func (db *appdbimpl) GetConversationByID(convID string) (Conversation, error) {
 		return Conversation{}, err
 	}
 	return c, nil
+}
+
+func (db *appdbimpl) DeleteConversation(convID string) error {
+	query := `DELETE FROM conversations WHERE id = ?`
+	res, err := db.c.Exec(query, convID)
+	if err != nil {
+		return err
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		return errors.New("conversation not found")
+	}
+	return nil
 }

@@ -2,8 +2,6 @@ package api
 
 import (
 	"net/http"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 // Handler restituisce l'istanza di httprouter configurata
@@ -61,8 +59,8 @@ func (rt *_router) Handler() http.Handler {
 // ----------------------------------------------------------------------
 // PLACEHOLDERS (STUBS)
 // Definiamo queste funzioni vuote per far compilare il progetto.
-// Nelle prossime fasi le sposteremo nei file specifici (es. auth.go, messages.go)
-// riempiendole con la logica vera.
+// Nelle prossime fasi le sposteremo nei file specifici
+// riempiendole con la logica
 // ----------------------------------------------------------------------
 
 /*
@@ -98,6 +96,14 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 */
+/*
+func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 
 func (rt *_router) getMyGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -110,15 +116,7 @@ func (rt *_router) deleteConversation(w http.ResponseWriter, r *http.Request, ps
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-/*
-func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
 
-*/
 
 func (rt *_router) getMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -136,7 +134,7 @@ func (rt *_router) uncommentMessage(w http.ResponseWriter, r *http.Request, ps h
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-/*
+
 	func (rt *_router) createGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNotImplemented)
 	}
