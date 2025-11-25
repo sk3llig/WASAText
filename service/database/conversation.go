@@ -16,10 +16,9 @@ func (db *appdbimpl) CreateConversation(c Conversation, participantIDs []string)
 	// Se qualcosa va male, facciamo Rollback alla fine
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback() // <--- CORREZIONE: Assegna l'errore a _
 		}
 	}()
-
 	// 2. Inseriamo la conversazione
 	queryConv := `INSERT INTO conversations (id, name, is_group, photo_url) VALUES (?, ?, ?, ?)`
 	if _, err = tx.Exec(queryConv, c.ID, c.Name, c.IsGroup, c.PhotoURL); err != nil {
@@ -77,7 +76,8 @@ func (db *appdbimpl) GetConversationsByUser(userID string) ([]Conversation, erro
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+
+	defer func() { _ = rows.Close() }()
 
 	var res []Conversation
 	for rows.Next() {

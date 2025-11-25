@@ -43,8 +43,7 @@ func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
+	defer func() { _ = rows.Close() }()
 	var res []Message
 	for rows.Next() {
 		var m Message
