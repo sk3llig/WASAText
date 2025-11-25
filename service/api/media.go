@@ -33,8 +33,9 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 		rt.sendJSONError(w, http.StatusBadRequest, "Missing 'file' field in multipart/form-data")
 		return
 	}
-	defer file.Close()
-
+	defer func() {
+		_ = file.Close()
+	}()
 	// 4. Lettura primi bytes per controllare il tipo (MIME sniffing)
 	buff := make([]byte, 512)
 	_, err = file.Read(buff)
@@ -75,8 +76,9 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	defer dst.Close()
-
+	defer func() {
+		_ = dst.Close()
+	}()
 	if _, err := io.Copy(dst, file); err != nil {
 		rt.baseLogger.WithError(err).Error("Error saving file content")
 		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")

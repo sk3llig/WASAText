@@ -53,6 +53,8 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/v1/groups/:group_id/name", rt.setGroupName)
 	rt.router.PUT("/v1/groups/:group_id/photo", rt.setGroupPhoto)
 
+	rt.router.GET("/liveness", rt.liveness)
+
 	return rt.router
 }
 
@@ -87,18 +89,20 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, _ httprout
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-*/
+
 
 func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
+func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+*/
+
 func (rt *_router) getMyGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
 func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -106,12 +110,16 @@ func (rt *_router) deleteConversation(w http.ResponseWriter, r *http.Request, ps
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+/*
 func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
+
+*/
+
 func (rt *_router) getMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -128,9 +136,11 @@ func (rt *_router) uncommentMessage(w http.ResponseWriter, r *http.Request, ps h
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-func (rt *_router) createGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
+/*
+	func (rt *_router) createGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}
+
 func (rt *_router) listGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -143,6 +153,8 @@ func (rt *_router) deleteGroup(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) listGroupMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
+
+
 func (rt *_router) addToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -155,3 +167,5 @@ func (rt *_router) setGroupName(w http.ResponseWriter, r *http.Request, ps httpr
 func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
+
+*/
