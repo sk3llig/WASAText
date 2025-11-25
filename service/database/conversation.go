@@ -78,6 +78,7 @@ func (db *appdbimpl) GetConversationsByUser(userID string) ([]Conversation, erro
 		return nil, err
 	}
 	defer rows.Close()
+	defer rows.Close()
 
 	var res []Conversation
 	for rows.Next() {
@@ -113,4 +114,17 @@ func (db *appdbimpl) GetConversationByID(convID string) (Conversation, error) {
 		return Conversation{}, err
 	}
 	return c, nil
+}
+
+func (db *appdbimpl) DeleteConversation(convID string) error {
+	query := `DELETE FROM conversations WHERE id = ?`
+	res, err := db.c.Exec(query, convID)
+	if err != nil {
+		return err
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		return errors.New("conversation not found")
+	}
+	return nil
 }

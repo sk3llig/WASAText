@@ -112,3 +112,105 @@ func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, _ 
 
 	rt.sendJSONResponse(w, http.StatusOK, res)
 }
+
+// getMyGroups (GET /me/groups)
+func (rt *_router) getMyGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	userID, err := rt.extractUser(r)
+	if err != nil {
+		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Riutilizziamo la query che prende tutte le chat e filtriamo in Go
+	allConvs, err := rt.db.GetConversationsByUser(userID)
+	if err != nil {
+		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Error")
+		return
+	}
+
+	var res GroupsList
+	res.Groups = make([]Group, 0)
+
+	for _, c := range allConvs {
+		if c.IsGroup {
+			res.Groups = append(res.Groups, Group{
+				ID:       c.ID,
+				Name:     c.Name,
+				PhotoURL: c.PhotoURL,
+				// Members: []string{} // Non carichiamo i membri nella lista per velocità
+			})
+		}
+	}
+	rt.sendJSONResponse(w, http.StatusOK, res)
+}
+
+// getConversation (GET /conversations/:conversation_id)
+// deve tornare Info + Partecipanti + Ultimi Messaggi
+func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_, err := rt.extractUser(r)
+	if err != nil {
+		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	convID := ps.ByName("conversation_id")
+
+	// 1. Info Conversazione
+	dbConv, err := rt.db.GetConversationByID(convID)
+	if err != nil {
+		rt.sendJSONError(w, http.StatusNotFound, "Conversation not found")
+		return
+	}
+
+	// 2. Lista Messaggi
+	dbMsgs, err := rt.db.GetMessagesByConversation(convID)
+	if err != nil {
+		rt.baseLogger.WithError(err).Error("Error fetching messages") // Non bloccante, magari lista vuota
+	}
+
+	// 3. Recupero Partecipanti (Serve una query GetGroupMembers o simile)
+	// Nota: Se è 1-to-1 usiamo GetGroupMembers lo stesso, funziona su 'participants'
+	memberIDs, err := rt.db.GetGroupMembers(convID)
+
+	// Costruzione risposta complessa
+	details := ConversationDetails{
+		ID:           dbConv.ID,
+		Name:         dbConv.Name,
+		IsGroup:      dbConv.IsGroup,
+		Participants: []User{},
+		Messages:     []Message{},
+	}
+
+	// Popola partecipanti (con dettagli User)
+	for _, mid := range memberIDs {
+		u, _ := rt.db.GetUserByID(mid)
+		details.Participants = append(details.Participants, User{ID: u.ID, Name: u.Name, PhotoURL: u.PhotoURL})
+	}
+
+	// Popola messaggi
+	for _, m := range dbMsgs {
+		details.Messages = append(details.Messages, Message{
+			ID: m.ID, ConversationID: m.ConversationID, Content: m.Content,
+			Sender:    User{ID: m.SenderID, Name: m.SenderName},
+			Timestamp: m.Timestamp, Type: m.Type, Attachments: m.Attachments,
+		})
+	}
+
+	rt.sendJSONResponse(w, http.StatusOK, details)
+}
+
+// deleteConversation (DELETE /conversations/:id)
+func (rt *_router) deleteConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_, err := rt.extractUser(r)
+	if err != nil {
+		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	// TODO: Controllare permessi (solo admin/owner o partecipante?)
+
+	err = rt.db.DeleteConversation(ps.ByName("conversation_id"))
+	if err != nil {
+		rt.sendJSONError(w, http.StatusNotFound, "Conversation not found")
+		return
+	}
+	rt.sendJSONResponse(w, http.StatusOK, SuccessMessage{Success: true, Message: "Deleted"})
+}

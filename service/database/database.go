@@ -53,20 +53,25 @@ type AppDatabase interface {
 	CreateConversation(conv Conversation, participantIDs []string) (Conversation, error)
 	GetConversationsByUser(userID string) ([]Conversation, error)
 	GetConversationByID(id string) (Conversation, error)
+	DeleteConversation(convID string) error
 
 	// --- MESSAGES ---
 	CreateMessage(m Message) (Message, error)
 	GetMessagesByConversation(convID string) ([]Message, error)
+	GetMessageByID(msgID string) (Message, error)
+	DeleteMessage(convID, msgID, userID string) error
 
 	// --- GROUPS ---
 	AddToGroup(groupID string, userID string) error
 	LeaveGroup(groupID string, userID string) error
 	SetGroupName(groupID string, name string) error
 	SetGroupPhoto(groupID string, photoURL string) error
-
-	// [NUOVI AGGIUNTI ORA]
 	GetGroupMembers(groupID string) ([]string, error)
 	DeleteGroup(groupID string) error
+
+	// --- REACTIONS (EXTRA) ---
+	AddReaction(convID, msgID, userID, emoji string) error
+	RemoveReaction(convID, msgID, userID, emoji string) error
 }
 
 // ---------------------------------------------------------
