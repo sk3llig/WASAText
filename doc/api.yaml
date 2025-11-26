@@ -26,6 +26,8 @@ tags:
     description: Messages within conversations
   - name: groups
     description: Group management and membership
+  - name: media
+    description: Media upload and management
 
 paths:
   # Authentication
@@ -71,7 +73,7 @@ paths:
 
   /images:
     post:
-      tags: [ "media" ]
+      tags: ["media"]
       summary: Carica un'immagine
       description: Carica un file (multipart) e restituisce l'URL da usare nei messaggi o nel profilo.
       operationId: uploadImage
@@ -188,7 +190,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json: # <--- ERA multipart/form-data, ORA è application/json
+          application/json:
             schema:
               $ref: "#/components/schemas/SetPhotoRequest"
       responses:
@@ -223,8 +225,6 @@ paths:
       summary: Retrieve my conversations
       description: Returns the authenticated user's conversations in reverse chronological order.
       operationId: getMyConversations
-
-
       responses:
         "200":
           description: List of conversations
@@ -333,7 +333,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     get:
       tags: ["conversations"]
       summary: Get conversation details
@@ -418,7 +418,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     post:
       tags: ["messages"]
       summary: Send a new message
@@ -485,7 +485,7 @@ paths:
             type: string
             minLength: 3
             maxLength: 64
-            pattern: "^[A-Za-z0-9_-]+$"
+            pattern: "^[A-Za-z0-9_\\-]+$"
           description: Message id to paginate before (exclusive).
       responses:
         '200':
@@ -527,7 +527,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
       - name: message_id
         in: path
         required: true
@@ -535,7 +535,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     post:
       tags: ["messages"]
       summary: Forward a message
@@ -586,7 +586,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
       - name: message_id
         in: path
         required: true
@@ -594,7 +594,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     post:
       tags: ["messages"]
       summary: Add a reaction to a message
@@ -677,7 +677,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
       - name: message_id
         in: path
         required: true
@@ -685,7 +685,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     delete:
       tags: ["messages"]
       summary: Delete one of my messages
@@ -831,7 +831,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     get:
       tags: ["groups"]
       summary: Get group details
@@ -900,7 +900,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     get:
       tags: ["groups"]
       summary: List group members
@@ -975,7 +975,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     delete:
       tags: ["groups"]
       summary: Leave a group
@@ -1013,7 +1013,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     put:
       tags: ["groups"]
       summary: Change group name
@@ -1064,7 +1064,7 @@ paths:
           type: string
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
     put:
       tags: ["groups"]
       summary: Update group photo
@@ -1072,7 +1072,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json: # <--- ERA multipart/form-data, ORA è application/json
+          application/json:
             schema:
               $ref: "#/components/schemas/SetPhotoRequest"
       responses:
@@ -1174,7 +1174,7 @@ components:
           description: Unique identifier of the authenticated user (alphanumeric).
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "abcdef012345"
 
     #Image
@@ -1186,12 +1186,12 @@ components:
           description: Unique user identifier (alphanumeric).
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "user_123"
         url:
           type: string
           minLength: 3
-          maxLength: 200
+          maxLength: 2048
           format: url
           description: URL pubblico dell'immagine
           example: "http://localhost:3000/images/foto.jpg"
@@ -1210,7 +1210,7 @@ components:
           description: Unique user identifier (alphanumeric).
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "user_123"
         name:
           type: string
@@ -1264,7 +1264,7 @@ components:
             type: string
             minLength: 3
             maxLength: 64
-            pattern: "^[A-Za-z0-9_-]+$"
+            pattern: "^[A-Za-z0-9_\\-]+$"
           description: IDs of the users to include in the conversation
           minItems: 1
           maxItems: 50
@@ -1289,7 +1289,7 @@ components:
           description: Conversation identifier (alphanumeric).
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "conv_abc123"
         name:
           type: string
@@ -1366,14 +1366,14 @@ components:
           description: Message identifier (alphanumeric)
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "msg_001"
         conversation_id:
           type: string
           description: Conversation identifier
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "conv_abc123"
         sender:
           $ref: "#/components/schemas/User"
@@ -1391,7 +1391,7 @@ components:
           description: ID of the message being replied to (if any)
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
         type:
           type: string
           description: Message media type
@@ -1465,7 +1465,7 @@ components:
           description: Optional message id being replied to
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
         attachments:
           type: array
           description: List of attachment URLs.
@@ -1487,7 +1487,7 @@ components:
           description: ID of the conversation where the message is forwarded
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "conv_target_456"
         comment:
           type: string
@@ -1531,7 +1531,7 @@ components:
             type: string
             minLength: 3
             maxLength: 64
-            pattern: "^[A-Za-z0-9_-]+$"
+            pattern: "^[A-Za-z0-9_\\-]+$"
           description: List of user identifiers to add to the group
           minItems: 1
           maxItems: 200
@@ -1548,7 +1548,7 @@ components:
           description: User identifier to add to group
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "user_456"
 
     SetGroupNameRequest:
@@ -1574,7 +1574,7 @@ components:
           description: Group identifier
           minLength: 3
           maxLength: 64
-          pattern: "^[A-Za-z0-9_-]+$"
+          pattern: "^[A-Za-z0-9_\\-]+$"
           example: "group789"
         name:
           type: string
@@ -1588,7 +1588,7 @@ components:
             type: string
             minLength: 3
             maxLength: 64
-            pattern: "^[A-Za-z0-9_-]+$"
+            pattern: "^[A-Za-z0-9_\\-]+$"
           description: Member user identifiers
           example: ["user123", "user456", "user789"]
           minItems: 0
