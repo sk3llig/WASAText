@@ -87,6 +87,10 @@ paths:
                 file:
                   type: string
                   format: binary
+                  description: >
+                    Il file immagine binario da caricare.
+                    Dimensione massima consigliata: 5MB. Formati supportati: JPEG, PNG.
+
       responses:
         "201":
           description: Immagine caricata
@@ -521,6 +525,7 @@ paths:
   /conversations/{conversation_id}/messages/{message_id}/forward:
     parameters:
       - name: conversation_id
+        description: conversation unique id
         in: path
         required: true
         schema:
