@@ -107,6 +107,10 @@ paths:
 
         "413":
           description: File troppo grande
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   # Profile Management
   /me:
