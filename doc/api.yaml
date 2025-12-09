@@ -8,8 +8,8 @@ info:
   version: "1.0.0"
 
 servers:
-  - url: http://localhost:8080/v1
-    description: Local development server (v1)
+  - url: http://localhost:3000
+    description: Local development server
 
 # Global security: use Bearer identifier returned by /session
 security:

@@ -8,48 +8,48 @@ import (
 func (rt *_router) Handler() http.Handler {
 
 	// --- AUTH ---
-	rt.router.POST("/v1/session", rt.doLogin)
+	rt.router.POST("/session", rt.doLogin)
 
 	// --- MEDIA ---
-	rt.router.POST("/v1/images", rt.uploadImage)
+	rt.router.POST("/images", rt.uploadImage)
 	// ServeFiles permette di vedere le immagini dal browser (es. localhost:3000/images/foto.jpg)
 	rt.router.ServeFiles("/images/*filepath", http.Dir("./images"))
 
 	// --- PROFILE ---
-	rt.router.GET("/v1/me", rt.getMyProfile)
-	rt.router.PUT("/v1/me/name", rt.setMyUserName)
-	rt.router.PUT("/v1/me/photo", rt.setMyPhoto)
-	rt.router.GET("/v1/me/conversations", rt.getMyConversations)
-	rt.router.GET("/v1/me/groups", rt.getMyGroups)
+	rt.router.GET("/me", rt.getMyProfile)
+	rt.router.PUT("/me/name", rt.setMyUserName)
+	rt.router.PUT("/me/photo", rt.setMyPhoto)
+	rt.router.GET("/me/conversations", rt.getMyConversations)
+	rt.router.GET("/me/groups", rt.getMyGroups)
 
 	// --- CONVERSATIONS ---
-	rt.router.POST("/v1/conversations", rt.createConversation)
-	rt.router.GET("/v1/conversations/:conversation_id", rt.getConversation)
-	rt.router.DELETE("/v1/conversations/:conversation_id", rt.deleteConversation)
+	rt.router.POST("/conversations", rt.createConversation)
+	rt.router.GET("/conversations/:conversation_id", rt.getConversation)
+	rt.router.DELETE("/conversations/:conversation_id", rt.deleteConversation)
 
 	// --- MESSAGES ---
-	rt.router.GET("/v1/conversations/:conversation_id/messages", rt.getConversationMessages)
-	rt.router.POST("/v1/conversations/:conversation_id/messages", rt.sendMessage)
-	rt.router.GET("/v1/conversations/:conversation_id/messages/:message_id", rt.getMessage)
-	rt.router.DELETE("/v1/conversations/:conversation_id/messages/:message_id", rt.deleteMessage)
+	rt.router.GET("/conversations/:conversation_id/messages", rt.getConversationMessages)
+	rt.router.POST("/conversations/:conversation_id/messages", rt.sendMessage)
+	rt.router.GET("/conversations/:conversation_id/messages/:message_id", rt.getMessage)
+	rt.router.DELETE("/conversations/:conversation_id/messages/:message_id", rt.deleteMessage)
 
 	// --- MESSAGE ACTIONS ---
-	rt.router.POST("/v1/conversations/:conversation_id/messages/:message_id/forward", rt.forwardMessage)
-	rt.router.POST("/v1/conversations/:conversation_id/messages/:message_id/reactions", rt.commentMessage)
-	rt.router.DELETE("/v1/conversations/:conversation_id/messages/:message_id/reactions", rt.uncommentMessage)
+	rt.router.POST("/conversations/:conversation_id/messages/:message_id/forward", rt.forwardMessage)
+	rt.router.POST("/conversations/:conversation_id/messages/:message_id/reactions", rt.commentMessage)
+	rt.router.DELETE("/conversations/:conversation_id/messages/:message_id/reactions", rt.uncommentMessage)
 
 	// --- GROUPS ---
-	rt.router.POST("/v1/groups", rt.createGroup)
-	rt.router.GET("/v1/groups", rt.listGroups)
-	rt.router.GET("/v1/groups/:group_id", rt.getGroup)
-	rt.router.DELETE("/v1/groups/:group_id", rt.deleteGroup)
+	rt.router.POST("/groups", rt.createGroup)
+	rt.router.GET("/groups", rt.listGroups)
+	rt.router.GET("/groups/:group_id", rt.getGroup)
+	rt.router.DELETE("/groups/:group_id", rt.deleteGroup)
 
 	// --- GROUP MEMBERS & DETAILS ---
-	rt.router.GET("/v1/groups/:group_id/members", rt.listGroupMembers)
-	rt.router.POST("/v1/groups/:group_id/members", rt.addToGroup)
-	rt.router.DELETE("/v1/groups/:group_id/members/me", rt.leaveGroup)
-	rt.router.PUT("/v1/groups/:group_id/name", rt.setGroupName)
-	rt.router.PUT("/v1/groups/:group_id/photo", rt.setGroupPhoto)
+	rt.router.GET("/groups/:group_id/members", rt.listGroupMembers)
+	rt.router.POST("/groups/:group_id/members", rt.addToGroup)
+	rt.router.DELETE("/groups/:group_id/members/me", rt.leaveGroup)
+	rt.router.PUT("/groups/:group_id/name", rt.setGroupName)
+	rt.router.PUT("/groups/:group_id/photo", rt.setGroupPhoto)
 
 	rt.router.GET("/liveness", rt.liveness)
 
