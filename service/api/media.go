@@ -10,7 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// uploadImage gestisce l'upload di un file immagine (POST /v1/images)
+// uploadImage gestisce l'upload di un file immagine (POST /images)
 func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// 1. Controllo Autenticazione (Solo utenti loggati possono caricare)
 	_, err := rt.extractUser(r)
@@ -72,9 +72,17 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 	// 6. Salvataggio su disco
 	dst, err := os.Create(savePath)
 	if err != nil {
-		rt.baseLogger.WithError(err).Error("Error creating file on disk")
-		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")
-		return
+
+		if os.IsNotExist(err) {
+			_ = os.MkdirAll("./images", 0755) // Prova a creare la cartella
+			dst, err = os.Create(savePath)    // Riprova
+		}
+
+		if err != nil {
+			rt.baseLogger.WithError(err).Error("Error creating file on disk")
+			rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
 	}
 	defer func() {
 		_ = dst.Close()
@@ -86,8 +94,7 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	// 7. Costruzione Risposta
-	// Nota: Costruiamo l'URL pubblico. In produzione sarebbe il dominio vero.
-	publicURL := "http://localhost:3000/images/" + newFileName
+	publicURL := "/images/" + newFileName
 
 	resp := ImageMetadata{
 		ID:          id,
