@@ -214,13 +214,24 @@ export default {
       } catch (e) { alert("Errore upload"); }
     },
     async handleProfileUpdate(file) {
-      try {
-        let url = await this.uploadFileGeneric(file);
-        await axios.put('/me/photo', { photo_url: url });
-        this.loadMyProfile();
-        this.showProfileModal = false;
-      } catch (e) { alert("Errore profilo"); }
-    },
+		try {
+			// Carica la foto sul server e ottieni il nuovo URL
+			let url = await this.uploadFileGeneric(file);
+
+			// Aggiorna il DB del backend
+			await axios.put('/me/photo', { photo_url: url });
+			
+			// Vue vedrà il cambiamento e aggiornerà subito l'immagine nella NavBar.
+			this.myPhoto = url;
+
+			// Chiudi il modale
+			this.showProfileModal = false;
+
+		} catch (e) {
+			console.error(e);
+			alert("Errore aggiornamento foto");
+		}
+	},
     async handleGroupPhotoUpdate(file) {
       try {
         let url = await this.uploadFileGeneric(file);
