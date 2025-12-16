@@ -2,7 +2,7 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal-dialog shadow-lg">
       <div class="modal-content p-4">
-        
+
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
           <h5 class="mb-0">Inoltra a...</h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
@@ -10,11 +10,11 @@
 
         <div class="list-group overflow-auto mb-3" style="max-height: 300px;">
           <div v-if="loading" class="text-center p-3">Caricamento...</div>
-          
-          <button 
+
+          <button
             v-else
-            v-for="conv in conversations" 
-            :key="conv.id" 
+            v-for="conv in conversations"
+            :key="conv.id"
             class="list-group-item list-group-item-action d-flex align-items-center"
             @click="selectChat(conv)"
           >
@@ -57,7 +57,7 @@ export default {
     async loadConversations() {
       this.loading = true;
       try {
-        let res = await axios.get('/v1/me/conversations');
+        let res = await axios.get('/me/conversations');
         this.conversations = res.data.conversations || [];
       } catch (e) { console.error(e); }
       this.loading = false;

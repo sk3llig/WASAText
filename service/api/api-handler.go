@@ -12,7 +12,6 @@ func (rt *_router) Handler() http.Handler {
 
 	// --- MEDIA ---
 	rt.router.POST("/v1/images", rt.uploadImage)
-	// ServeFiles permette di vedere le immagini dal browser (es. localhost:3000/images/foto.jpg)
 	rt.router.ServeFiles("/images/*filepath", http.Dir("./images"))
 
 	// --- PROFILE ---

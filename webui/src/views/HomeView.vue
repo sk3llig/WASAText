@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid vh-100 d-flex flex-column overflow-hidden p-0">
-    
-    <GroupInfoModal 
+
+    <GroupInfoModal
       v-if="showGroupInfoModal && activeConv"
       :groupId="activeConv.id"
       :currentName="activeConv.name"
@@ -9,16 +9,16 @@
       @name-updated="loadConversations"
     />
 
-    <NavBar 
-      :myUsername="myUsername" 
+    <NavBar
+      :myUsername="myUsername"
       :myPhoto="myPhoto"
       @logout="logout"
       @open-profile="showProfileModal = true"
     />
 
     <div class="row flex-grow-1 g-0 overflow-hidden">
-      
-      <ChatSidebar 
+
+      <ChatSidebar
         :conversations="conversations"
         :activeConvId="activeConv ? activeConv.id : null"
         @select-chat="selectConversation"
@@ -26,7 +26,7 @@
         @delete-chat="deleteConversation"
       />
 
-      <ChatWindow 
+      <ChatWindow
         :activeConv="activeConv"
         :messages="messages"
         :myUsername="myUsername"
@@ -43,7 +43,7 @@
 
     </div>
 
-    <ProfileModal 
+    <ProfileModal
       v-if="showProfileModal"
       :myUsername="myUsername"
       :myPhoto="myPhoto"
@@ -52,14 +52,14 @@
       @update-photo="handleProfileUpdate"
     />
 
-    <NewChatModal 
+    <NewChatModal
       v-if="showChatModal"
       @close="showChatModal = false"
       @create-private="startPrivateChat"
       @create-group="startGroupChat"
     />
 
-    <ForwardModal 
+    <ForwardModal
       v-if="showForwardModal"
       @close="showForwardModal = false"
       @forward-to="handleForward"
@@ -77,7 +77,7 @@ import ChatWindow from '../components/ChatWindow.vue';
 import ProfileModal from '../components/ProfileModal.vue';
 import NewChatModal from '../components/NewChatModal.vue';
 import GroupInfoModal from '../components/GroupInfoModal.vue';
-import ForwardModal from '../components/ForwardModal.vue'; // <--- AGGIUNGI QUESTO
+import ForwardModal from '../components/ForwardModal.vue';
 
 export default {
   components: { NavBar, ChatSidebar, ChatWindow, ProfileModal, NewChatModal, GroupInfoModal ,ForwardModal},
@@ -85,17 +85,17 @@ export default {
     return {
       myUsername: localStorage.getItem('username'),
       myId: localStorage.getItem('token'), // Nel simplified login l'ID è il token
-      myPhoto: null, 
+      myPhoto: null,
       conversations: [],
       messages: [],
       activeConv: null,
       pollInterval: null,
-      
+
       // Stati Modali
       showProfileModal: false,
       showChatModal: false,
       showGroupInfoModal: false,
-      showForwardModal: false, 
+      showForwardModal: false,
     msgToForward: null,
     }
   },
@@ -108,18 +108,18 @@ export default {
     }, 2000);
   },
   beforeUnmount() { clearInterval(this.pollInterval); },
-  
+
   methods: {
     // --- LOGICA DATI ---
     async loadMyProfile() {
       try {
-        let res = await axios.get('/v1/me');
+        let res = await axios.get('/me');
         this.myPhoto = res.data.photo_url;
       } catch (e) {}
     },
     async loadConversations() {
       try {
-        let res = await axios.get('/v1/me/conversations');
+        let res = await axios.get('/me/conversations');
         this.conversations = res.data.conversations || [];
       } catch (e) { console.error(e); }
     },
@@ -130,15 +130,15 @@ export default {
     async loadMessages() {
       if (!this.activeConv) return;
       try {
-        let res = await axios.get(`/v1/conversations/${this.activeConv.id}/messages`);
+        let res = await axios.get(`/conversations/${this.activeConv.id}/messages`);
         this.messages = (res.data.messages || []).reverse();
       } catch (e) {}
     },
-    
+
     // --- AZIONI UTENTE ---
     async sendMessage(text) {
       try {
-        await axios.post(`/v1/conversations/${this.activeConv.id}/messages`, { content: text, attachments: [] });
+        await axios.post(`/conversations/${this.activeConv.id}/messages`, { content: text, attachments: [] });
         this.loadMessages();
       } catch(e) { alert("Errore invio"); }
     },
@@ -146,7 +146,7 @@ export default {
     // --- GESTIONE CHAT ---
     async findUserId(name) {
       try {
-        let res = await axios.post('/v1/session', { name: name });
+        let res = await axios.post('/session', { name: name });
         if (res.data.identifier === this.myId) {
           alert("Non puoi chattare con te stesso!"); return null;
         }
@@ -168,7 +168,7 @@ export default {
 
     async createConvAPI(ids, isGroup, name) {
       try {
-        let res = await axios.post('/v1/conversations', {
+        let res = await axios.post('/conversations', {
           participant_ids: ids, is_group: isGroup, group_name: name
         });
         this.showChatModal = false;
@@ -181,42 +181,42 @@ export default {
 
     async deleteConversation(conv) {
       if (!confirm("Eliminare chat?")) return;
-      try { await axios.delete(`/v1/conversations/${conv.id}`); this.activeConv = null; this.loadConversations(); } catch (e) {}
+      try { await axios.delete(`/conversations/${conv.id}`); this.activeConv = null; this.loadConversations(); } catch (e) {}
     },
     async leaveGroup() {
       if (!confirm("Uscire dal gruppo?")) return;
-      try { await axios.delete(`/v1/groups/${this.activeConv.id}/members/me`); this.activeConv = null; this.loadConversations(); } catch (e) {}
+      try { await axios.delete(`/groups/${this.activeConv.id}/members/me`); this.activeConv = null; this.loadConversations(); } catch (e) {}
     },
 
     // --- MESSAGGI ---
     async deleteMessage(msg) {
       if (!confirm("Eliminare messaggio?")) return;
-      try { await axios.delete(`/v1/conversations/${this.activeConv.id}/messages/${msg.id}`); this.loadMessages(); } catch (e) { alert("Non puoi eliminare questo messaggio."); }
+      try { await axios.delete(`/conversations/${this.activeConv.id}/messages/${msg.id}`); this.loadMessages(); } catch (e) { alert("Non puoi eliminare questo messaggio."); }
     },
     async addReaction(msg, emoji) {
-      try { await axios.post(`/v1/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { emoji }); this.loadMessages(); } catch (e) {}
+      try { await axios.post(`/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { emoji }); this.loadMessages(); } catch (e) {}
     },
     async removeReaction(msg, reaction) {
-      try { await axios.delete(`/v1/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { params: { emoji: reaction.emoji } }); this.loadMessages(); } catch (e) {}
+      try { await axios.delete(`/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { params: { emoji: reaction.emoji } }); this.loadMessages(); } catch (e) {}
     },
 
     // --- UPLOAD ---
     async uploadFileGeneric(file) {
       let formData = new FormData(); formData.append('file', file);
-      let res = await axios.post('/v1/images', formData);
+      let res = await axios.post('/images', formData);
       return res.data.url;
     },
     async handleImageUpload(file) {
       try {
         let url = await this.uploadFileGeneric(file);
-        await axios.post(`/v1/conversations/${this.activeConv.id}/messages`, { content: '', attachments: [url] });
+        await axios.post(`/conversations/${this.activeConv.id}/messages`, { content: '', attachments: [url] });
         this.loadMessages();
       } catch (e) { alert("Errore upload"); }
     },
     async handleProfileUpdate(file) {
       try {
         let url = await this.uploadFileGeneric(file);
-        await axios.put('/v1/me/photo', { photo_url: url });
+        await axios.put('/me/photo', { photo_url: url });
         this.loadMyProfile();
         this.showProfileModal = false;
       } catch (e) { alert("Errore profilo"); }
@@ -224,7 +224,7 @@ export default {
     async handleGroupPhotoUpdate(file) {
       try {
         let url = await this.uploadFileGeneric(file);
-        await axios.put(`/v1/groups/${this.activeConv.id}/photo`, { photo_url: url });
+        await axios.put(`/groups/${this.activeConv.id}/photo`, { photo_url: url });
         this.activeConv.photo_url = url; // Update locale immediato
         this.loadConversations();
       } catch (e) { alert("Errore foto gruppo"); }
@@ -241,17 +241,17 @@ export default {
     // 2. Esegue l'inoltro vero e proprio
     async handleForward({ targetId, comment }) {
       if (!this.msgToForward) return;
-      
+
       try {
-        await axios.post(`/v1/conversations/${this.activeConv.id}/messages/${this.msgToForward.id}/forward`, {
+        await axios.post(`/conversations/${this.activeConv.id}/messages/${this.msgToForward.id}/forward`, {
           target_conversation_id: targetId,
           comment: comment
         });
-        
+
         this.showForwardModal = false;
         this.msgToForward = null;
         alert("Messaggio inoltrato!");
-        
+
         // Se hai inoltrato alla chat che stavi guardando, ricarica i messaggi
         if (this.activeConv.id === targetId) {
           this.loadMessages();

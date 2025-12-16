@@ -2,7 +2,7 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal-dialog shadow-lg">
       <div class="modal-content p-4">
-        
+
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
           <h5 class="mb-0">Gestione Gruppo</h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
@@ -32,7 +32,7 @@
           <label class="form-label text-muted small fw-bold">MEMBRI ({{ members.length }})</label>
           <div class="list-group overflow-auto" style="max-height: 200px;">
             <div v-if="loading" class="text-center p-2">Caricamento...</div>
-            
+
             <div v-else v-for="u in members" :key="u.id" class="list-group-item d-flex align-items-center">
               <img :src="u.photo_url || 'https://placehold.co/40'" class="rounded-circle me-2 object-fit-cover" width="32" height="32">
               <span class="text-truncate">{{ u.name }}</span>
@@ -67,7 +67,7 @@ export default {
     async loadMembers() {
       this.loading = true;
       try {
-        let res = await axios.get(`/v1/groups/${this.groupId}/members`);
+        let res = await axios.get(`/groups/${this.groupId}/members`);
         this.members = res.data.members || [];
       } catch (e) {
         alert("Errore caricamento membri");
@@ -79,7 +79,7 @@ export default {
     async updateName() {
       if (!this.editName.trim()) return;
       try {
-        await axios.put(`/v1/groups/${this.groupId}/name`, { name: this.editName });
+        await axios.put(`/groups/${this.groupId}/name`, { name: this.editName });
         this.$emit('name-updated'); // Avvisa il padre di ricaricare
         alert("Nome aggiornato!");
       } catch (e) {
@@ -90,15 +90,15 @@ export default {
     // 3. Aggiungi Membro (Cerca ID dal nome -> Aggiungi ID)
     async addMember() {
       if (!this.newMemberName.trim()) return;
-      
+
       try {
         // A. Trova l'ID dell'utente (usando il trucco del login)
-        let userRes = await axios.post('/v1/session', { name: this.newMemberName });
+        let userRes = await axios.post('/session', { name: this.newMemberName });
         let newUserId = userRes.data.identifier;
 
         // B. Aggiungi al gruppo
-        await axios.post(`/v1/groups/${this.groupId}/members`, { user_id: newUserId });
-        
+        await axios.post(`/groups/${this.groupId}/members`, { user_id: newUserId });
+
         this.newMemberName = '';
         this.loadMembers(); // Ricarica la lista
       } catch (e) {
