@@ -94,7 +94,7 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	// 7. Costruzione Risposta
-	publicURL := "/images/" + newFileName
+	publicURL := "http://" + r.Host + "/images/" + newFileName
 
 	resp := ImageMetadata{
 		ID:          id,
@@ -103,4 +103,5 @@ func (rt *_router) uploadImage(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	rt.sendJSONResponse(w, http.StatusCreated, resp)
+
 }
