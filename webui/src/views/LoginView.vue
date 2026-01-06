@@ -6,10 +6,10 @@
       <div class="mb-3">
         <label for="username" class="form-label">Scegli uno Username</label>
         <input
-          type="text"
           id="username"
-          class="form-control"
           v-model="username"
+          type="text"
+          class="form-control"
           placeholder="Es. Alice"
           @keyup.enter="doLogin"
         >
@@ -21,10 +21,10 @@
 
       <button
         class="btn btn-primary w-100"
-        @click="doLogin"
         :disabled="loading"
+        @click="doLogin"
       >
-        <span v-if="loading" class="spinner-border spinner-border-sm"></span>
+        <span v-if="loading" class="spinner-border spinner-border-sm" />
         <span v-else>Entra</span>
       </button>
     </div>

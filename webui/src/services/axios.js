@@ -1,9 +1,8 @@
 import axios from "axios";
 
 const instance = axios.create({
-	// L'indirizzo del backend Go.
-	baseURL: "http://localhost:3000",
-	timeout: 1000 * 5 // 5 secondi timeout
+	baseURL: __API_URL__,
+	timeout: 1000 * 5
 });
 
 // Questo intercettore aggiunge automaticamente il TOKEN a ogni richiesta

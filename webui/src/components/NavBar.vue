@@ -2,7 +2,7 @@
   <nav class="navbar navbar-light bg-white border-bottom px-4 justify-content-between">
     <div class="d-flex align-items-center">
       <span class="navbar-brand fw-bold text-primary mb-0 h1">
-        <i class="bi bi-chat-dots-fill"></i> WASAText
+        <i class="bi bi-chat-dots-fill" /> WASAText
       </span>
     </div>
     
@@ -10,8 +10,8 @@
       <div 
         class="d-flex align-items-center me-3 p-1 rounded hover-bg" 
         style="cursor: pointer;"
-        @click="$emit('open-profile')" 
-        title="Modifica Profilo"
+        title="Modifica Profilo" 
+        @click="$emit('open-profile')"
       >
         <img 
           :src="myPhoto || 'https://placehold.co/50'" 

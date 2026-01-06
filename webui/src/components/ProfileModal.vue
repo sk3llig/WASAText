@@ -4,7 +4,7 @@
       <div class="modal-content p-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="mb-0">Il tuo Profilo</h4>
-          <button type="button" class="btn-close" @click="$emit('close')"></button>
+          <button type="button" class="btn-close" @click="$emit('close')" />
         </div>
 
         <div class="text-center my-4">
@@ -17,8 +17,8 @@
             <button 
               class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" 
               style="width: 35px; height: 35px;"
-              @click="$refs.profileInput.click()"
               title="Cambia Foto"
+              @click="$refs.profileInput.click()"
             >
               📷
             </button>
@@ -33,7 +33,7 @@
 
         <button class="btn btn-secondary w-100" @click="$emit('close')">Chiudi</button>
         
-        <input type="file" ref="profileInput" class="d-none" accept="image/*" @change="handleFile">
+        <input ref="profileInput" type="file" class="d-none" accept="image/*" @change="handleFile">
       </div>
     </div>
   </div>

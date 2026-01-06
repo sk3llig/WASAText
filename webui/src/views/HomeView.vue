@@ -1,35 +1,33 @@
 <template>
   <div class="container-fluid vh-100 d-flex flex-column overflow-hidden p-0">
-
     <GroupInfoModal
       v-if="showGroupInfoModal && activeConv"
-      :groupId="activeConv.id"
-      :currentName="activeConv.name"
+      :group-id="activeConv.id"
+      :current-name="activeConv.name"
       @close="showGroupInfoModal = false"
       @name-updated="loadConversations"
     />
 
     <NavBar
-      :myUsername="myUsername"
-      :myPhoto="myPhoto"
+      :my-username="myUsername"
+      :my-photo="myPhoto"
       @logout="logout"
       @open-profile="showProfileModal = true"
     />
 
     <div class="row flex-grow-1 g-0 overflow-hidden">
-
       <ChatSidebar
         :conversations="conversations"
-        :activeConvId="activeConv ? activeConv.id : null"
+        :active-conv-id="activeConv ? activeConv.id : null"
         @select-chat="selectConversation"
         @open-new-chat="showChatModal = true"
         @delete-chat="deleteConversation"
       />
 
       <ChatWindow
-        :activeConv="activeConv"
+        :active-conv="activeConv"
         :messages="messages"
-        :myUsername="myUsername"
+        :my-username="myUsername"
         @send-message="sendMessage"
         @send-image="handleImageUpload"
         @update-group-photo="handleGroupPhotoUpdate"
@@ -40,14 +38,13 @@
         @open-group-info="showGroupInfoModal = true"
         @forward-message="openForwardModal"
       />
-
     </div>
 
     <ProfileModal
       v-if="showProfileModal"
-      :myUsername="myUsername"
-      :myPhoto="myPhoto"
-      :myId="myId"
+      :my-username="myUsername"
+      :my-photo="myPhoto"
+      :my-id="myId"
       @close="showProfileModal = false"
       @update-photo="handleProfileUpdate"
     />
@@ -64,7 +61,6 @@
       @close="showForwardModal = false"
       @forward-to="handleForward"
     />
-
   </div>
 </template>
 

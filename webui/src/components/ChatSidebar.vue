@@ -1,6 +1,5 @@
 <template>
   <div class="col-md-4 col-lg-3 border-end d-flex flex-column bg-light h-100">
-    
     <div class="p-3 border-bottom bg-white">
       <button class="btn btn-primary w-100 shadow-sm" @click="$emit('open-new-chat')">
         + Nuova Conversazione
@@ -31,8 +30,8 @@
         
         <button 
           class="btn btn-link text-danger position-absolute end-0 top-50 translate-middle-y p-2 delete-btn" 
-          @click.stop="$emit('delete-chat', conv)" 
-          title="Elimina"
+          title="Elimina" 
+          @click.stop="$emit('delete-chat', conv)"
         >
           🗑️
         </button>

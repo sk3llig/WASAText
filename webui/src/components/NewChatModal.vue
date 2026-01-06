@@ -6,17 +6,17 @@
         
         <ul class="nav nav-pills nav-fill mb-4 bg-light p-1 rounded">
           <li class="nav-item">
-            <a class="nav-link" :class="{active: !isGroup}" @click="isGroup=false" href="#" style="cursor:pointer">Privata</a>
+            <a class="nav-link" :class="{active: !isGroup}" href="#" style="cursor:pointer" @click="isGroup=false">Privata</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" :class="{active: isGroup}" @click="isGroup=true" href="#" style="cursor:pointer">Gruppo</a>
+            <a class="nav-link" :class="{active: isGroup}" href="#" style="cursor:pointer" @click="isGroup=true">Gruppo</a>
           </li>
         </ul>
 
         <div v-if="!isGroup">
           <div class="mb-3">
             <label class="form-label">Nome Utente</label>
-            <input type="text" class="form-control" v-model="targetName" placeholder="Es. Bob" @keyup.enter="confirm">
+            <input v-model="targetName" type="text" class="form-control" placeholder="Es. Bob" @keyup.enter="confirm">
             <div class="form-text">Cerca un utente per nome.</div>
           </div>
         </div>
@@ -24,21 +24,20 @@
         <div v-else>
           <div class="mb-3">
             <label class="form-label">Nome del Gruppo</label>
-            <input type="text" class="form-control" v-model="groupName" placeholder="Es. Calcetto" @keyup.enter="confirm">
+            <input v-model="groupName" type="text" class="form-control" placeholder="Es. Calcetto" @keyup.enter="confirm">
           </div>
           <div class="mb-3">
             <label class="form-label">Aggiungi un Membro (Username)</label>
-            <input type="text" class="form-control" v-model="targetName" placeholder="Es. Alice">
+            <input v-model="targetName" type="text" class="form-control" placeholder="Es. Alice">
           </div>
         </div>
 
         <div class="d-flex gap-2 mt-4">
           <button class="btn btn-light flex-grow-1" @click="$emit('close')">Annulla</button>
-          <button class="btn btn-primary flex-grow-1" @click="confirm" :disabled="!isValid">
+          <button class="btn btn-primary flex-grow-1" :disabled="!isValid" @click="confirm">
             {{ isGroup ? 'Crea Gruppo' : 'Inizia Chat' }}
           </button>
         </div>
-
       </div>
     </div>
   </div>

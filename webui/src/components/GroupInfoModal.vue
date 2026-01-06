@@ -2,17 +2,16 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal-dialog shadow-lg">
       <div class="modal-content p-4">
-
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
           <h5 class="mb-0">Gestione Gruppo</h5>
-          <button type="button" class="btn-close" @click="$emit('close')"></button>
+          <button type="button" class="btn-close" @click="$emit('close')" />
         </div>
 
         <div class="mb-4">
           <label class="form-label text-muted small fw-bold">NOME GRUPPO</label>
           <div class="input-group">
-            <input type="text" class="form-control" v-model="editName" placeholder="Nome gruppo">
-            <button class="btn btn-outline-primary" @click="updateName" :disabled="editName === currentName">
+            <input v-model="editName" type="text" class="form-control" placeholder="Nome gruppo">
+            <button class="btn btn-outline-primary" :disabled="editName === currentName" @click="updateName">
               Salva
             </button>
           </div>
@@ -21,7 +20,7 @@
         <div class="mb-4">
           <label class="form-label text-muted small fw-bold">AGGIUNGI MEMBRO</label>
           <div class="input-group">
-            <input type="text" class="form-control" v-model="newMemberName" placeholder="Username (es. Bob)" @keyup.enter="addMember">
+            <input v-model="newMemberName" type="text" class="form-control" placeholder="Username (es. Bob)" @keyup.enter="addMember">
             <button class="btn btn-success" @click="addMember">
               +
             </button>
@@ -33,13 +32,12 @@
           <div class="list-group overflow-auto" style="max-height: 200px;">
             <div v-if="loading" class="text-center p-2">Caricamento...</div>
 
-            <div v-else v-for="u in members" :key="u.id" class="list-group-item d-flex align-items-center">
+            <div v-for="u in members" v-else :key="u.id" class="list-group-item d-flex align-items-center">
               <img :src="u.photo_url || 'https://placehold.co/40'" class="rounded-circle me-2 object-fit-cover" width="32" height="32">
               <span class="text-truncate">{{ u.name }}</span>
-              </div>
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
