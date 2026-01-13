@@ -106,9 +106,15 @@ export default {
 			  // this.$emit('close');
 
 		  } catch (e) {
-			  console.error("ERRORE:", e);
-			  alert("Errore: " + (e.response ? e.response.data : e.message));
-			  this.errormsg = e.response ? e.response.data : e.toString();
+			  // Gestione errori specifica
+			  if (e.response && e.response.status === 409) {
+				  // 409 Conflict -> Messaggio dal backend: "Nome già utilizzato..."
+				  this.errorMsg = "Spiacente, questo nome è già in uso. Scegline un altro.";
+			  } else if (e.response && e.response.status === 400) {
+				  this.errorMsg = "Nome non valido.";
+			  } else {
+				  this.errorMsg = "Errore del server. Riprova più tardi.";
+			  }
 		  } finally {
 			  this.loading = false;
 		  }

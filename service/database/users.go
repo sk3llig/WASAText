@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 // CreateUser inserisce un nuovo utente nel database
@@ -56,10 +57,17 @@ func (db *appdbimpl) GetUserByID(id string) (User, error) {
 }
 
 // SetUserName aggiorna il nome utente
-func (db *appdbimpl) SetUserName(id string, name string) error {
+func (db *appdbimpl) SetUserName(userID string, newName string) error {
+
+	// CORREZIONE: Qui c'era scritto quasi sicuramente "username"
+	// Devi cambiarlo in "name" perché è così che si chiama la tua colonna nel DB
 	query := `UPDATE users SET name = ? WHERE id = ?`
-	_, err := db.c.Exec(query, name, id)
-	return err
+
+	_, err := db.c.Exec(query, newName, userID)
+	if err != nil {
+		return fmt.Errorf("error updating name: %w", err)
+	}
+	return nil
 }
 
 // SetPhotoUrl aggiorna la foto profilo
@@ -97,4 +105,30 @@ func (db *appdbimpl) CheckUserByUsername(username string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// GetUserIDByName cerca l'ID dato il nome.
+// Se non lo trova, restituisce stringa vuota e NESSUN errore.
+func (db *appdbimpl) GetUserIDByName(name string) (string, error) {
+	var id string
+	// Assicurati che la colonna sia 'name'
+	query := "SELECT id FROM users WHERE name = ?"
+
+	err := db.c.QueryRow(query, name).Scan(&id)
+
+	// --- QUESTA È LA PARTE CHE RISOLVE IL TUO PROBLEMA ---
+	if err == sql.ErrNoRows {
+		// Non abbiamo trovato nessuno con questo nome.
+		// È OTTIMO se stiamo controllando la disponibilità.
+		// Restituiamo id vuoto e nil (nessun errore).
+		return "", nil
+	}
+	// -----------------------------------------------------
+
+	if err != nil {
+		// Questo è un errore vero (es. database spento)
+		return "", err
+	}
+
+	return id, nil
 }

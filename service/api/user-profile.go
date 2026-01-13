@@ -29,8 +29,9 @@ func (rt *_router) getMyProfile(w http.ResponseWriter, r *http.Request, _ httpro
 	rt.sendJSONResponse(w, http.StatusOK, user)
 }
 
-// setMyUserName cambia il nome utente
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Println("--- Inizio cambio nome ---") // DEBUG
+
 	userID, err := rt.extractUser(r)
 	if err != nil {
 		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
@@ -43,22 +44,37 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, _ httpr
 		return
 	}
 
-	if len(req.Name) < 1 || len(req.Name) > 64 {
-		rt.sendJSONError(w, http.StatusBadRequest, "Name length invalid")
+	fmt.Println("Nome richiesto:", req.Name) // DEBUG
+
+	// 1. Controllo Unicità
+	fmt.Println("Controllo se il nome esiste...") // DEBUG
+	ownerID, err := rt.db.GetUserIDByName(req.Name)
+	if err != nil {
+		// SE VEDI QUESTO ERRORE NEL TERMINALE, IL PROBLEMA È NELLA QUERY SQL
+		fmt.Println("ERRORE DB DURANTE IL CONTROLLO:", err)
+		rt.sendJSONError(w, http.StatusInternalServerError, "Database error checking name: "+err.Error())
 		return
 	}
 
-	// Aggiorna DB
+	if ownerID != "" && ownerID != userID {
+		fmt.Println("Nome già preso da:", ownerID) // DEBUG
+		rt.sendJSONError(w, http.StatusConflict, "Username taken")
+		return
+	}
+
+	// 2. Aggiornamento
+	fmt.Println("Aggiorno il database...") // DEBUG
 	err = rt.db.SetUserName(userID, req.Name)
 	if err != nil {
-		rt.baseLogger.WithError(err).Error("Database error updating name")
+		fmt.Println("ERRORE DB DURANTE UPDATE:", err) // DEBUG
 		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	// Ritorna il profilo aggiornato
+	// 3. Risposta
 	user, _ := rt.db.GetUserByID(userID)
 	rt.sendJSONResponse(w, http.StatusOK, user)
+	fmt.Println("--- Finito con successo ---") // DEBUG
 }
 
 // setMyPhoto aggiorna la foto profilo usando un URL (Upload-First pattern)

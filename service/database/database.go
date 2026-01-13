@@ -51,6 +51,7 @@ type AppDatabase interface {
 	SetUserName(id string, name string) error
 	SetPhotoUrl(id string, url string) error
 	CheckUserByUsername(username string) (bool, error)
+	GetUserIDByName(name string) (string, error)
 
 	// --- CONVERSATIONS ---
 	CreateConversation(conv Conversation, participantIDs []string) (Conversation, error)
