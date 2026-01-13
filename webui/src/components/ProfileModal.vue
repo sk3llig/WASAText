@@ -9,13 +9,13 @@
 
         <div class="text-center my-4">
           <div class="position-relative d-inline-block">
-            <img 
-              :src="myPhoto || 'https://placehold.co/150'" 
-              class="rounded-circle border object-fit-cover" 
+            <img
+              :src="myPhoto || 'https://placehold.co/150'"
+              class="rounded-circle border object-fit-cover"
               width="120" height="120"
             >
-            <button 
-              class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" 
+            <button
+              class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle"
               style="width: 35px; height: 35px;"
               title="Cambia Foto"
               @click="$refs.profileInput.click()"
@@ -28,11 +28,32 @@
         <div class="mb-4 text-center">
           <label class="text-muted small">Username</label>
           <div class="fs-4 fw-bold">{{ myUsername }}</div>
-          <div class="small text-muted">ID: {{ myId ? myId.substring(0,8) + '...' : '...' }}</div>
+          <div class="small text-muted">ID: {{ myId ? String(myId).substring(0,8) + '...' : '...' }}</div>
         </div>
+		  <div class="mb-3">
+			  <label for="username-input" class="form-label">Username</label>
+			  <div class="input-group">
+				  <input
+					  id="username-input"
+					  type="text"
+					  class="form-control"
+					  v-model="newUsername"
+					  placeholder="Nuovo nome..."
+				  >
+				  <button
+					  class="btn btn-primary"
+					  type="button"
+					  @click="updateUsername"
+					  :disabled="newUsername.length < 3 || newUsername === myUsername"
+				  >
+					  Aggiorna
+				  </button>
+			  </div>
+			  <div class="form-text">Minimo 3 caratteri.</div>
+		  </div>
 
         <button class="btn btn-secondary w-100" @click="$emit('close')">Chiudi</button>
-        
+
         <input ref="profileInput" type="file" class="d-none" accept="image/*" @change="handleFile">
       </div>
     </div>
@@ -42,8 +63,56 @@
 <script>
 export default {
   props: ['myUsername', 'myPhoto', 'myId'],
-  emits: ['close', 'update-photo'],
+  emits: ['close', 'update-photo','update:myUsername'],
+
+	data() {
+		return {
+			// Inizializziamo il campo con il nome attuale
+			newUsername: this.myUsername,
+			loading: false,
+			errormsg: null,
+		}
+	},
+
+	// Importante: se il nome cambia da fuori, aggiorniamo anche l'input
+	watch: {
+		myUsername(newVal) {
+			this.newUsername = newVal;
+		}
+	},
   methods: {
+	  async updateUsername() {
+		  this.loading = true;
+		  this.errormsg = null;
+
+		  try {
+			  // Logghiamo cosa stiamo facendo (senza usare variabili che non esistono)
+			  console.log("Invio richiesta a: /me/name");
+			  console.log("Nuovo nome:", this.newUsername);
+
+			  // CHIAMATA CORRETTA
+			  let response = await this.$axios.put('/me/name', {
+				  name: this.newUsername
+			  });
+
+			  // Se arriviamo qui, è andato tutto bene
+			  console.log("Successo!");
+
+			  // Aggiorniamo il frontend
+			  this.$emit('update:myUsername', this.newUsername);
+			  alert("Nome aggiornato con successo!");
+
+			  // Chiudiamo il modale (opzionale, se vuoi che si chiuda da solo)
+			  // this.$emit('close');
+
+		  } catch (e) {
+			  console.error("ERRORE:", e);
+			  alert("Errore: " + (e.response ? e.response.data : e.message));
+			  this.errormsg = e.response ? e.response.data : e.toString();
+		  } finally {
+			  this.loading = false;
+		  }
+	  },
     handleFile(e) {
       if (e.target.files[0]) {
         this.$emit('update-photo', e.target.files[0]);
@@ -51,6 +120,7 @@ export default {
     }
   }
 }
+
 </script>
 
 <style scoped>

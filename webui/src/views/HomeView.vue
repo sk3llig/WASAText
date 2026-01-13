@@ -40,14 +40,15 @@
       />
     </div>
 
-    <ProfileModal
-      v-if="showProfileModal"
-      :my-username="myUsername"
-      :my-photo="myPhoto"
-      :my-id="myId"
-      @close="showProfileModal = false"
-      @update-photo="handleProfileUpdate"
-    />
+	  <ProfileModal
+		  v-if="showProfileModal"
+		  :my-username="myUsername"
+		  :my-id="myId"
+		  :my-photo="myPhoto"
+		  @close="showProfileModal = false"
+		  @update:myUsername="myUsername = $event"
+		  @update-photo="uploadPhoto"
+	  />
 
     <NewChatModal
       v-if="showChatModal"
@@ -92,7 +93,7 @@ export default {
       showChatModal: false,
       showGroupInfoModal: false,
       showForwardModal: false,
-    msgToForward: null,
+		msgToForward: null,
     }
   },
   async mounted() {
@@ -138,6 +139,11 @@ export default {
         this.loadMessages();
       } catch(e) { alert("Errore invio"); }
     },
+
+	  async uploadPhoto(file) {
+		  console.log("TODO: Implementare caricamento foto", file);
+		  alert("Funzionalità caricamento foto non ancora implementata!");
+	  },
 
     // --- GESTIONE CHAT ---
     async findUserId(name) {
@@ -216,7 +222,7 @@ export default {
 
 			// Aggiorna il DB del backend
 			await axios.put('/me/photo', { photo_url: url });
-			
+
 			// Vue vedrà il cambiamento e aggiornerà subito l'immagine nella NavBar.
 			this.myPhoto = url;
 

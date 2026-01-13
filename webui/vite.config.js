@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
 				'@': fileURLToPath(new URL('./src', import.meta.url))
 			}
 		},
-		server: {
+	server: {
 			port: 5173,
 			strictPort: true,
 			proxy: {
