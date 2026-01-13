@@ -9,7 +9,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// createConversation (POST /conversations)
 func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// 1. Auth
 	userID, err := rt.extractUser(r)
@@ -26,7 +25,6 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// 3. Validazione
-	// Aggiungiamo chi crea la chat alla lista partecipanti (se non c'è già)
 	hasMe := false
 	for _, p := range req.ParticipantIDs {
 		if p == userID {
@@ -43,8 +41,33 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	// TODO: Qui dovresti controllare se è una chat 1-to-1 e se esiste già.
-	// Per l'esame base, possiamo saltare questo controllo complesso o implementarlo dopo.
+	// Controlliamo se TUTTI gli utenti invitati esistono davvero
+	// ================== BLOCCO INTELLIGENTE ==================
+	// Ciclo su tutti i partecipanti richiesti
+	for i, pID := range req.ParticipantIDs {
+		// 1. Proviamo a vedere se è un ID valido
+		exists, _ := rt.db.CheckUserExists(pID)
+
+		if exists {
+			// È un ID valido, tutto ok! Continua col prossimo.
+			continue
+		}
+
+		// 2. Se non è un ID, forse è un NOME? Proviamo a cercare l'ID dal nome.
+		userObj, err := rt.db.GetUserByName(pID)
+		if err != nil {
+			// Non è né un ID né un Nome valido -> ERRORE
+			rt.baseLogger.WithError(err).Error("User not found by name or ID")
+			rt.sendJSONError(w, http.StatusBadRequest, "User not found: "+pID)
+			return
+		}
+
+		// 3. Trovato! Sostituiamo il nome ("Alice") con l'ID vero ("5af5...")
+		// così il resto del codice e il database sono felici.
+		req.ParticipantIDs[i] = userObj.ID
+	}
+	// =========================================================
+	// ================== [FINE NUOVO BLOCCO] ====================
 
 	// 4. Crea Oggetto DB
 	newConv := database.Conversation{
@@ -67,9 +90,8 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ 
 	apiConv := Conversation{
 		ID:      savedConv.ID,
 		IsGroup: savedConv.IsGroup,
-		Name:    &savedConv.Name, // Puntatore per gestire null
+		Name:    &savedConv.Name,
 	}
-	// Se è vuota (1-to-1), Name deve essere nil nel JSON
 	if savedConv.Name == "" {
 		apiConv.Name = nil
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -91,4 +92,27 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, _ httprout
 	// Ritorna il profilo aggiornato
 	user, _ := rt.db.GetUserByID(userID)
 	rt.sendJSONResponse(w, http.StatusOK, user)
+}
+
+func (rt *_router) checkUserExistence(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	username := ps.ByName("username")
+
+	exists, err := rt.db.CheckUserByUsername(username)
+
+	if err != nil {
+		// --- AGGIUNGI QUESTA RIGA PER IL DEBUG ---
+		fmt.Println("ERRORE DATABASE:", err)
+		// ----------------------------------------
+
+		// Mandiamo l'errore anche al frontend per vederlo nella console del browser
+		http.Error(w, "Errore interno server: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !exists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

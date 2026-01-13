@@ -21,6 +21,8 @@ type Conversation struct {
 	Name     string // Vuoto per chat 1-to-1
 	IsGroup  bool
 	PhotoURL string
+
+	CreatorID string // Essenziale per sapere chi può rimuovere i membri
 }
 
 type Message struct {
@@ -48,12 +50,14 @@ type AppDatabase interface {
 	GetUserByID(id string) (User, error)
 	SetUserName(id string, name string) error
 	SetPhotoUrl(id string, url string) error
+	CheckUserByUsername(username string) (bool, error)
 
 	// --- CONVERSATIONS ---
 	CreateConversation(conv Conversation, participantIDs []string) (Conversation, error)
 	GetConversationsByUser(userID string) ([]Conversation, error)
 	GetConversationByID(id string) (Conversation, error)
 	DeleteConversation(convID string) error
+	CheckUserExists(id string) (bool, error)
 
 	// --- MESSAGES ---
 	CreateMessage(m Message) (Message, error)
@@ -83,7 +87,7 @@ type appdbimpl struct {
 }
 
 // New crea una nuova istanza del database
-func New(db *sql.DB) (AppDatabase, error) {
+func New(db *sql.DB) (*appdbimpl, error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}

@@ -68,3 +68,33 @@ func (db *appdbimpl) SetPhotoUrl(id string, url string) error {
 	_, err := db.c.Exec(query, url, id)
 	return err
 }
+
+// CheckUserExists verifica se un utente esiste dato il suo ID
+func (db *appdbimpl) CheckUserExists(id string) (bool, error) {
+	var exists int
+	// La query cerca 1 riga con quell'ID
+	err := db.c.QueryRow("SELECT 1 FROM users WHERE id = ?", id).Scan(&exists)
+
+	if err == sql.ErrNoRows {
+		return false, nil // Non c'è errore, ma non esiste l'utente
+	}
+	if err != nil {
+		return false, err // Errore vero del database
+	}
+	return true, nil // Esiste!
+}
+
+// CheckUserByUsername verifica se esiste un utente dato il suo USERNAME
+func (db *appdbimpl) CheckUserByUsername(username string) (bool, error) {
+	var exists int
+	// MODIFICA QUI: cerchiamo nella colonna 'username', non 'id'
+	err := db.c.QueryRow("SELECT 1 FROM users WHERE name = ?", username).Scan(&exists)
+
+	if err == sql.ErrNoRows {
+		return false, nil // Username non trovato
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

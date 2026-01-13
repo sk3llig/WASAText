@@ -21,6 +21,9 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/me/conversations", rt.getMyConversations)
 	rt.router.GET("/me/groups", rt.getMyGroups)
 
+	// Aggiungi questa riga insieme alle altre
+	rt.router.GET("/users/:username", rt.checkUserExistence)
+
 	// --- CONVERSATIONS ---
 	rt.router.POST("/conversations", rt.createConversation)
 	rt.router.GET("/conversations/:conversation_id", rt.getConversation)
