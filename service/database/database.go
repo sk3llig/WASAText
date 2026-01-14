@@ -25,16 +25,25 @@ type Conversation struct {
 	CreatorID string // Essenziale per sapere chi può rimuovere i membri
 }
 
+// NUOVA STRUCT REACTION
+type ReactionSimple struct {
+	Emoji    string `json:"emoji"`
+	UserName string `json:"user_name"` // Solo il nome, come volevi
+}
+
 type Message struct {
-	ID             string
-	ConversationID string
-	SenderID       string
-	SenderName     string // Popolato via JOIN
-	Content        string
-	Timestamp      time.Time
-	Type           string
-	Attachments    []string
-	ReplyTo        string
+	ID             string    `json:"id"`
+	ConversationID string    `json:"conversation_id"`
+	SenderID       string    `json:"sender_id"`
+	SenderName     string    `json:"sender_name"` // IL TUO VECCHIO CAMPO (INVARIATO)
+	Content        string    `json:"content"`
+	Timestamp      time.Time `json:"timestamp"`
+	Type           string    `json:"type"`
+	Attachments    []string  `json:"attachments"`
+	ReplyTo        string    `json:"reply_to,omitempty"`
+
+	// UNICA AGGIUNTA ALLA STRUCT:
+	Reactions []ReactionSimple `json:"reactions"`
 }
 
 // ---------------------------------------------------------
@@ -148,7 +157,39 @@ func New(db *sql.DB) (*appdbimpl, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating messages table: %w", err)
 	}
+	// 5. REACTIONS (QUESTA MANCAVA!)
+	// Chiave primaria composta (message_id, user_id, emoji) per evitare duplicati
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS reactions (
+       conversation_id TEXT NOT NULL,
+       message_id TEXT NOT NULL,
+       user_id TEXT NOT NULL,
+       emoji TEXT NOT NULL,
+       PRIMARY KEY (message_id, user_id, emoji),
+       FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+       FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );`)
+	if err != nil {
+		return nil, fmt.Errorf("error creating reactions table: %w", err)
+	}
+	// 5. REACTIONS
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS reactions (
+       conversation_id TEXT NOT NULL,
+       message_id TEXT NOT NULL,
+       user_id TEXT NOT NULL,
+       emoji TEXT NOT NULL,
 
+       -- Vincolo di unicità: Un utente può mettere 1 sola volta la stessa emoji sullo stesso messaggio
+       PRIMARY KEY (message_id, user_id, emoji),
+
+       -- Chiavi Esterne
+       FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+       FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );`)
+	if err != nil {
+		return nil, fmt.Errorf("error creating reactions table: %w", err)
+	}
 	return &appdbimpl{
 		c: db,
 	}, nil

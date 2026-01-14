@@ -60,40 +60,70 @@ func (db *appdbimpl) GetMessageByID(msgID string) (Message, error) {
 
 // GetMessagesByConversation recupera la cronologia con JOIN per il nome utente
 func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error) {
-	// Recuperiamo messaggi + Nome del mittente (JOIN users)
+	// 1. Query principale (Messaggi)
 	query := `
-		SELECT
-			m.id, m.conversation_id, m.sender_id, u.name,
-			m.content, m.timestamp, m.type, m.attachments, m.reply_to
-		FROM messages m
-		LEFT JOIN users u ON m.sender_id = u.id
-		WHERE m.conversation_id = ?
-		ORDER BY m.timestamp DESC
-	`
+       SELECT
+          m.id, m.conversation_id, m.sender_id, u.name,
+          m.content, m.timestamp, m.type, m.attachments, m.reply_to
+       FROM messages m
+       LEFT JOIN users u ON m.sender_id = u.id
+       WHERE m.conversation_id = ?
+       ORDER BY m.timestamp ASC
+    `
+	// Nota: Ho messo ASC (dal più vecchio al più nuovo) che è standard per le chat.
+	// Se preferisci il contrario, rimetti DESC.
 
 	rows, err := db.c.Query(query, convID)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
+	defer rows.Close()
+
 	var res []Message
+
 	for rows.Next() {
 		var m Message
 		var attachmentsString string
-		var replyToSql interface{} // Può essere NULL
+		var replyToSql interface{}
 
+		// 2. Lettura dati base
 		err = rows.Scan(&m.ID, &m.ConversationID, &m.SenderID, &m.SenderName, &m.Content, &m.Timestamp, &m.Type, &attachmentsString, &replyToSql)
 		if err != nil {
 			return nil, err
 		}
 
-		// Convertiamo JSON string -> Array
 		_ = json.Unmarshal([]byte(attachmentsString), &m.Attachments)
-
-		// Gestione reply_to nullable
 		if replyToSql != nil {
 			m.ReplyTo = replyToSql.(string)
 		}
+
+		// --- 3. PEZZO MANCANTE: RECUPERO REAZIONI ---
+		// Senza questo blocco, m.Reactions rimane vuoto!
+		rQuery := `
+           SELECT r.emoji, u.name
+           FROM reactions r
+           JOIN users u ON r.user_id = u.id
+           WHERE r.message_id = ?`
+
+		rRows, rErr := db.c.Query(rQuery, m.ID)
+
+		// Inizializziamo come slice vuota, così non è mai 'null' nel JSON
+		var currentReactions = []ReactionSimple{}
+
+		if rErr == nil {
+			for rRows.Next() {
+				var r ReactionSimple
+				// Leggiamo emoji e nome utente
+				if err := rRows.Scan(&r.Emoji, &r.UserName); err == nil {
+					currentReactions = append(currentReactions, r)
+				}
+			}
+			rRows.Close()
+		}
+
+		// Assegniamo la lista trovata al messaggio
+		m.Reactions = currentReactions
+		// -------------------------------------------
 
 		res = append(res, m)
 	}

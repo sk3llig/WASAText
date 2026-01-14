@@ -116,8 +116,8 @@ export default {
 			memberInput: '',
 			groupMembers: [],
 
-			loading: false,       // Caricamento del tasto finale "Crea"
-			addingMember: false,  // <--- NUOVO: Spinner per il tasto "Aggiungi"
+			loading: false,
+			addingMember: false,
 			errormsg: null
 		}
 	},
@@ -127,7 +127,6 @@ export default {
 			if (!this.isGroup) {
 				return this.targetName.length > 0;
 			} else {
-				// Valido se ho un nome gruppo e almeno 1 membro in lista
 				return this.groupName.length > 0 && this.groupMembers.length > 0;
 			}
 		}
@@ -142,48 +141,44 @@ export default {
 			this.groupMembers = [];
 		},
 
-		// --- QUESTA È LA FUNZIONE CHE FA IL CONTROLLO ---
 		async addMemberToList() {
 			const val = this.memberInput.trim();
 			if (!val) return;
 
-			// 1. Controllo: Non posso aggiungere me stesso
-			// (Assumiamo che tu abbia l'ID o username corrente salvato da qualche parte, es. localStorage)
-			const myUsername = localStorage.getItem("username"); // Esempio
+			const myUsername = localStorage.getItem("username");
 			if (val === myUsername) {
 				this.errormsg = "Non puoi aggiungere te stesso.";
 				return;
 			}
 
-			// 2. Controllo Duplicati Locale (è già in lista?)
 			if (this.groupMembers.includes(val)) {
 				this.errormsg = "Utente già presente in lista.";
 				return;
 			}
 
-			// 3. VERIFICA ONLINE (Chiamata al Backend)
 			this.addingMember = true;
 			this.errormsg = null;
 
 			try {
-				// Chiamo l'API. Qui uso l'URL standard REST.
-				// Se il tuo endpoint è diverso, cambialo qui.
-				// Ci aspettiamo che restituisca 200 OK se esiste, 404 se no.
+				// Nota: Assicurati che il backend accetti GET /users/{username}
+				// Se il tuo backend richiede POST /session per cercare l'ID, va adattato qui.
 				await this.$axios.get("/users/" + val);
 
-				// Se arriviamo qui, l'utente ESISTE. Lo aggiungiamo.
 				this.groupMembers.push(val);
-				this.memberInput = ''; // Pulisco il campo
+				this.memberInput = '';
 
 			} catch (e) {
+				// GESTIONE SILENZIOSA ERRORE GRUPPO
 				if (e.response && e.response.status === 404) {
-					this.errormsg = `L'utente '${val}' non esiste.`;
+					// Utente non esiste: Mostriamo messaggio ma NON stampiamo console.error
+					this.errormsg = `⚠️ L'utente '${val}' non esiste.`;
 				} else {
-					console.error(e);
+					// Altri errori (es. server down): Stampiamo l'errore reale
+					console.error("Errore aggiunta membro:", e);
 					this.errormsg = "Errore di connessione.";
 				}
 			} finally {
-				this.addingMember = false; // Fermo lo spinner
+				this.addingMember = false;
 			}
 		},
 
@@ -203,19 +198,38 @@ export default {
 
 				if (this.isGroup) {
 					payload.group_name = this.groupName;
+			
 					payload.participant_ids = this.groupMembers;
 				} else {
-					// Per la chat privata faccio un controllo rapido anche qui se vuoi
-					// oppure lascio che fallisca se non esiste
 					payload.participant_ids = [this.targetName];
 				}
 
+				// Chiamata per creare la conversazione
 				await this.$axios.post("/conversations", payload);
 
 				this.$emit('chat-created');
 				this.$emit('close');
+
 			} catch (e) {
-				this.errormsg = e.response?.data || "Errore durante la creazione.";
+
+				// Se l'errore è 400 (Bad Request) o 404 (Not Found)
+				if (e.response && (e.response.status === 400 || e.response.status === 404)) {
+
+					// Messaggio personalizzato invece del JSON brutto
+					if (!this.isGroup) {
+						this.errormsg = `⚠️ Utente '${this.targetName}' non trovato.`;
+					} else {
+						this.errormsg = "⚠️ Uno o più utenti non sono validi.";
+					}
+
+					// NON facciamo console.error(e) qui!
+					// In console vedrai solo la riga rossa "POST ... 404" del browser (che è normale)
+
+				} else {
+					// Errore imprevisto (es. 500 Server Error)
+					console.error("Errore creazione chat:", e);
+					this.errormsg = "Errore del server. Riprova più tardi.";
+				}
 			} finally {
 				this.loading = false;
 			}

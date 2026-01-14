@@ -103,22 +103,48 @@ func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Mappatura DB -> API
+	// Mappatura DB -> API
 	var res MessagesList
 	res.Messages = make([]Message, 0)
+
 	for _, m := range msgs {
+
+		// 1. Convertiamo le reazioni dal formato Database al formato API
+		// (Il DB ci dà "ReactionSimple", l'API vuole "Reaction" con l'oggetto User)
+		var apiReactions []Reaction
+
+		if m.Reactions != nil {
+			for _, r := range m.Reactions {
+				apiReactions = append(apiReactions, Reaction{
+					Emoji: r.Emoji,
+					// Creiamo l'oggetto User usando il nome che abbiamo recuperato
+					User: User{
+						Name: r.UserName,
+					},
+				})
+			}
+		}
+
+		// 2. Costruiamo il messaggio finale
 		res.Messages = append(res.Messages, Message{
 			ID:             m.ID,
 			ConversationID: m.ConversationID,
+
+			// Mappatura Sender (già presente e corretta)
 			Sender: User{
 				ID:   m.SenderID,
-				Name: m.SenderName, // Arriva dalla JOIN
+				Name: m.SenderName,
 			},
+
 			Timestamp:   m.Timestamp,
 			Content:     m.Content,
 			Type:        m.Type,
 			Attachments: m.Attachments,
 			ReplyTo:     m.ReplyTo,
 			Status:      "read",
+
+			// 3. ECCO IL PEZZO CHE MANCAVA!
+			Reactions: apiReactions,
 		})
 	}
 
@@ -223,28 +249,37 @@ func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 
 // commentMessage (POST .../reactions)
 func (rt *_router) commentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// 1. Controlliamo i parametri URL
+	convID := ps.ByName("conversation_id")
+	msgID := ps.ByName("message_id")
+
+	// 2. Controlliamo l'Utente
 	userID, err := rt.extractUser(r)
+
 	if err != nil {
-		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		rt.sendJSONError(w, http.StatusUnauthorized, "Auth Error")
 		return
 	}
 
+	// 3. Controlliamo il JSON (Emoji)
 	var req CommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rt.sendJSONError(w, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
 
-	// AddReaction deve essere implementato nel DB (Tabella reactions)
-	err = rt.db.AddReaction(ps.ByName("conversation_id"), ps.ByName("message_id"), userID, req.Emoji)
+	// 4. Eseguiamo la query e stampiamo l'errore esatto
+	err = rt.db.AddReaction(convID, msgID, userID, req.Emoji)
+
 	if err != nil {
-		rt.sendJSONError(w, http.StatusInternalServerError, "Error adding reaction")
+
+		rt.sendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Mock response (in realtà dovresti ricaricare la reazione)
-	user, _ := rt.db.GetUserByID(userID)
-	rt.sendJSONResponse(w, http.StatusCreated, Reaction{Emoji: req.Emoji, User: User{ID: user.ID, Name: user.Name}})
+	// Risposta fittizia per chiudere la chiamata
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // uncommentMessage (DELETE .../reactions)

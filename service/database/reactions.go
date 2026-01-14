@@ -1,13 +1,56 @@
 package database
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+)
+
+// Definiscila qui, locale, così non litiga con gli altri pacchetti
+type ReactionDetail struct {
+	Emoji    string `json:"emoji"`
+	UserID   string `json:"user_id"`
+	UserName string `json:"user_name"`
+}
+
+// GetMessageReactionsList restituisce la lista dettagliata per il modale
+func (db *appdbimpl) GetMessageReactionsList(msgID string) ([]ReactionDetail, error) {
+	// Query mirata: JOIN tra reactions e users
+	query := `
+        SELECT r.emoji, u.id, u.name,
+        FROM reactions r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.message_id = ?
+    `
+
+	rows, err := db.c.Query(query, msgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []ReactionDetail
+
+	for rows.Next() {
+		var r ReactionDetail
+		var photoSql sql.NullString // Gestiamo il caso in cui la foto sia null
+
+		// Scansioniamo i dati
+		if err := rows.Scan(&r.Emoji, &r.UserID, &r.UserName, &photoSql); err != nil {
+			return nil, err
+		}
+
+		results = append(results, r)
+	}
+
+	return results, nil
+}
 
 // AddReaction aggiunge una reazione (emoji) a un messaggio
 func (db *appdbimpl) AddReaction(convID, msgID, userID, emoji string) error {
-	// Vincolo di unicità: la Primary Key (message_id, user_id, emoji) impedisce duplicati.
-	// Se l'utente prova a mettere due volte la stessa emoji, SQLite darà errore,
-	// che noi restituiamo al chiamante.
-	query := `INSERT INTO reactions (conversation_id, message_id, user_id, emoji) VALUES (?, ?, ?, ?)`
+	// PRIMA ERA: INSERT INTO reactions ...
+	// ORA DIVENTA: INSERT OR IGNORE INTO reactions ...
+
+	query := `INSERT OR IGNORE INTO reactions (conversation_id, message_id, user_id, emoji) VALUES (?, ?, ?, ?)`
 
 	_, err := db.c.Exec(query, convID, msgID, userID, emoji)
 	if err != nil {

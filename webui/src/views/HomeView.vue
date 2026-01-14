@@ -37,6 +37,7 @@
         @delete-message="deleteMessage"
         @open-group-info="showGroupInfoModal = true"
         @forward-message="openForwardModal"
+		@send-composite-message="handleCompositeMessage"
       />
     </div>
 
@@ -50,12 +51,12 @@
 		  @update-photo="uploadPhoto"
 	  />
 
-    <NewChatModal
-      v-if="showChatModal"
-      @close="showChatModal = false"
-      @create-private="startPrivateChat"
-      @create-group="startGroupChat"
-    />
+	  <NewChatModal
+		  v-if="showChatModal"
+		  :error-msg="chatModalError"    @close="showChatModal = false"
+		  @create-private="startPrivateChat"
+		  @create-group="startGroupChat"
+	  />
 
     <ForwardModal
       v-if="showForwardModal"
@@ -94,6 +95,7 @@ export default {
       showGroupInfoModal: false,
       showForwardModal: false,
 		msgToForward: null,
+		chatModalError: '',
     }
   },
   async mounted() {
@@ -140,21 +142,157 @@ export default {
       } catch(e) { alert("Errore invio"); }
     },
 
-	  async uploadPhoto(file) {
-		  console.log("TODO: Implementare caricamento foto", file);
-		  alert("Funzionalità caricamento foto non ancora implementata!");
-	  },
+	  // Dentro methods di HomeView.vue
 
+	  async uploadPhoto(file) {
+		  if (!file) return;
+
+		  try {
+			  console.log("Avvio caricamento file:", file.name);
+
+			  // 1. Creiamo il payload Multipart
+			  let formData = new FormData();
+
+			  // --- PUNTO CRUCIALE ---
+			  // Il tuo codice Go dice: r.FormFile("file")
+			  // Quindi qui DOBBIAMO usare "file", non "image" o "photo".
+			  formData.append("file", file);
+			  // ----------------------
+
+			  // 2. Upload fisico dell'immagine (POST /images)
+			  // Questa chiamata salva il file su disco e ci restituisce l'URL
+			  const uploadResponse = await this.$axios.post("/images", formData, {
+				  headers: {
+					  'Content-Type': 'multipart/form-data'
+				  }
+			  });
+
+			  // 3. Recuperiamo l'URL generato dal backend
+			  // Il tuo Go risponde con la struct ImageMetadata { ID, URL, ContentType }
+			  // Solitamente JSON trasforma i campi in minuscolo o come definiti nei tag.
+			  // Proviamo 'url' (standard) o 'URL'.
+			  const newPhotoUrl = uploadResponse.data.url || uploadResponse.data.URL;
+
+			  if (!newPhotoUrl) {
+				  throw new Error("Il server non ha restituito l'URL dell'immagine.");
+			  }
+
+			  console.log("Immagine salvata. URL:", newPhotoUrl);
+
+			  // 4. Aggiorniamo il profilo utente con il nuovo URL (PUT /me/photo)
+			  // Il tuo backend Go si aspetta un JSON con SetPhotoRequest
+			  await this.$axios.put("/me/photo", {
+				  photo_url: newPhotoUrl
+			  });
+
+			  // 5. Aggiorniamo l'interfaccia locale subito
+			  if (this.myProfile) {
+				  this.myProfile.photo_url = newPhotoUrl;
+			  }
+			  this.myPhoto = newPhotoUrl + '?t=' + new Date().getTime();
+			  alert("Foto aggiornata con successo!");
+
+		  } catch (e) {
+			  console.error("Errore durante l'upload:", e);
+
+			  // Gestione errori basata sui messaggi del tuo Backend Go
+			  if (e.response) {
+				  if (e.response.status === 400) {
+					  alert("Errore: " + (e.response.data || "Formato non valido o file troppo grande (Max 10MB, solo JPG/PNG)"));
+				  } else if (e.response.status === 401) {
+					  alert("Sessione scaduta. Esegui il login.");
+				  } else {
+					  alert("Errore del server: " + e.response.status);
+				  }
+			  } else {
+				  alert("Errore di connessione.");
+			  }
+		  }
+	  },
     // --- GESTIONE CHAT ---
-    async findUserId(name) {
-      try {
-        let res = await axios.post('/session', { name: name });
-        if (res.data.identifier === this.myId) {
-          alert("Non puoi chattare con te stesso!"); return null;
-        }
-        return res.data.identifier;
-      } catch (e) { alert("Utente " + name + " non trovato."); return null; }
-    },
+	  async handleCompositeMessage({ text, file }) {
+		  console.log("Invio messaggio combinato...", text, file);
+
+		  try {
+			  if (!this.activeConv || !this.activeConv.id) {
+				  console.error("Nessuna conversazione attiva!");
+				  return;
+			  }
+
+			  // 1. UPLOAD FOTO (Se c'è)
+			  let uploadedAttachments = []; // Deve essere un array!
+			  let messageType = "text";     // Default
+
+			  if (file) {
+				  messageType = "photo"; // Se c'è un file, il tipo diventa photo
+
+				  let formData = new FormData();
+				  formData.append("file", file);
+
+				  // Carichiamo l'immagine
+				  const uploadRes = await this.$axios.post("/images", formData, {
+					  headers: { 'Content-Type': 'multipart/form-data' }
+				  });
+
+				  // Recuperiamo l'URL.
+				  // Nota: adattalo se il backend risponde con .url o .URL
+				  const url = uploadRes.data.url || uploadRes.data.URL;
+
+				  // La struct vuole un array di stringhe in "attachments"
+				  uploadedAttachments.push(url);
+			  }
+
+			  // 2. PREPARAZIONE PAYLOAD (Esattamente come vuole la struct Go)
+			  const payload = {
+				  conversation_id: this.activeConv.id,  // Corretto da struct: `json:"conversation_id"`
+				  content: text || "",                  // Corretto da struct: `json:"content"`
+				  attachments: uploadedAttachments,     // Corretto da struct: `json:"attachments"` ([]string)
+				  type: messageType                     // Corretto da struct: `json:"type"` ("text" o "photo")
+			  };
+
+			  console.log("Payload finale:", payload);
+
+			  // 3. INVIO MESSAGGIO
+			  // IMPORTANTE: Se ti dà ancora 404, verifica l'URL nel punto 4 qui sotto
+			  await this.$axios.post(`/conversations/${this.activeConv.id}/messages`, payload);
+			  console.log("Messaggio inviato con successo!");
+
+			  // Aggiorna la chat (chiama la tua funzione di fetch o resetta)
+			  // this.fetchMessages();
+
+		  } catch (e) {
+			  console.error("Errore invio:", e);
+			  alert("Errore durante l'invio del messaggio.");
+		  }
+	  },
+	  async findUserId(name) {
+		  // 1. Resettiamo l'errore ogni volta che cerchiamo
+		  this.chatModalError = '';
+
+		  try {
+			  // Usiamo axios per cercare l'utente (endpoint /session o /users a seconda del tuo backend)
+			  let res = await axios.post('/session', { name: name });
+
+			  // Controllo se sono io
+			  if (res.data.identifier === this.myId) {
+				  this.chatModalError = "Non puoi chattare con te stesso!";
+				  return null;
+			  }
+
+			  return res.data.identifier;
+
+		  } catch (e) {
+			  // 2. GESTIONE SILENZIOSA (Niente console rossa per errori 404)
+			  if (e.response && (e.response.status === 404 || e.response.status === 400)) {
+				  this.chatModalError = "⚠️ Utente '" + name + "' non trovato.";
+			  } else {
+				  // Stampiamo in console solo se è un errore di server grave
+				  console.error(e);
+				  this.chatModalError = "Errore di connessione.";
+			  }
+			  return null;
+		  }
+	  },
 
     async startPrivateChat(username) {
       let uid = await this.findUserId(username);
@@ -198,6 +336,8 @@ export default {
     async addReaction(msg, emoji) {
       try { await axios.post(`/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { emoji }); this.loadMessages(); } catch (e) {}
     },
+
+
     async removeReaction(msg, reaction) {
       try { await axios.delete(`/conversations/${this.activeConv.id}/messages/${msg.id}/reactions`, { params: { emoji: reaction.emoji } }); this.loadMessages(); } catch (e) {}
     },

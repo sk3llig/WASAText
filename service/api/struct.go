@@ -112,7 +112,7 @@ type Message struct {
 	ReplyTo        string     `json:"reply_to,omitempty"`
 	Type           string     `json:"type"`        // "text" o "photo"
 	Attachments    []string   `json:"attachments"` // Array di URL
-	Status         string     `json:"status"`      // "sent", "received", "read"
+	Status         string     `json:"status"`      // "sent", "received", "read
 	Reactions      []Reaction `json:"reactions"`
 }
 

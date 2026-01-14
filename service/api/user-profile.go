@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -30,7 +29,6 @@ func (rt *_router) getMyProfile(w http.ResponseWriter, r *http.Request, _ httpro
 }
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Println("--- Inizio cambio nome ---") // DEBUG
 
 	userID, err := rt.extractUser(r)
 	if err != nil {
@@ -44,29 +42,22 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, _ httpr
 		return
 	}
 
-	fmt.Println("Nome richiesto:", req.Name) // DEBUG
-
 	// 1. Controllo Unicità
-	fmt.Println("Controllo se il nome esiste...") // DEBUG
 	ownerID, err := rt.db.GetUserIDByName(req.Name)
 	if err != nil {
 		// SE VEDI QUESTO ERRORE NEL TERMINALE, IL PROBLEMA È NELLA QUERY SQL
-		fmt.Println("ERRORE DB DURANTE IL CONTROLLO:", err)
 		rt.sendJSONError(w, http.StatusInternalServerError, "Database error checking name: "+err.Error())
 		return
 	}
 
 	if ownerID != "" && ownerID != userID {
-		fmt.Println("Nome già preso da:", ownerID) // DEBUG
 		rt.sendJSONError(w, http.StatusConflict, "Username taken")
 		return
 	}
 
 	// 2. Aggiornamento
-	fmt.Println("Aggiorno il database...") // DEBUG
 	err = rt.db.SetUserName(userID, req.Name)
 	if err != nil {
-		fmt.Println("ERRORE DB DURANTE UPDATE:", err) // DEBUG
 		rt.sendJSONError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
@@ -74,7 +65,6 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, _ httpr
 	// 3. Risposta
 	user, _ := rt.db.GetUserByID(userID)
 	rt.sendJSONResponse(w, http.StatusOK, user)
-	fmt.Println("--- Finito con successo ---") // DEBUG
 }
 
 // setMyPhoto aggiorna la foto profilo usando un URL (Upload-First pattern)
@@ -117,7 +107,6 @@ func (rt *_router) checkUserExistence(w http.ResponseWriter, r *http.Request, ps
 
 	if err != nil {
 		// --- AGGIUNGI QUESTA RIGA PER IL DEBUG ---
-		fmt.Println("ERRORE DATABASE:", err)
 		// ----------------------------------------
 
 		// Mandiamo l'errore anche al frontend per vederlo nella console del browser
