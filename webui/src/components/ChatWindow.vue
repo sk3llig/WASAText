@@ -16,11 +16,10 @@
 					<button class="btn btn-outline-danger btn-sm" @click="$emit('leave-group')">🚪 Esci</button>
 				</div>
 			</div>
-
 			<div id="chat-window" ref="scrollContainer" class="flex-grow-1 p-4 overflow-auto bg-chat" @click="openPickerId = null">
 				<div v-if="messages.length === 0" class="text-center mt-5">Inizia a scrivere!</div>
 
-				<div v-for="msg in messages" :key="msg.id" class="d-flex mb-3" :class="isMyMessage(msg) ? 'justify-content-end' : 'justify-content-start'">
+				<div v-for="msg in sortedMessages" :key="msg.id" class="d-flex mb-3" :class="isMyMessage(msg) ? 'justify-content-end' : 'justify-content-start'">
 					<div class="msg-container d-flex flex-column position-relative" :class="isMyMessage(msg) ? 'align-items-end' : 'align-items-start'">
 
 						<div class="msg-bubble p-2 px-3 shadow-sm" :class="isMyMessage(msg) ? 'bg-primary text-white my-msg' : 'bg-white border other-msg'">
@@ -164,6 +163,10 @@ export default {
 				groups[r.emoji].push(r);
 			});
 			return groups;
+		},
+		sortedMessages() {
+
+			return [...this.messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 		}
 	},
 

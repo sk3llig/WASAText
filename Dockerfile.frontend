@@ -1,0 +1,33 @@
+# STAGE 1: Builder
+# Usiamo node:20 come suggerito dal README (vedi open-node.sh)
+FROM node:20 AS builder
+
+# Impostiamo la cartella di lavoro principale
+WORKDIR /src
+
+# Copiamo la cartella webui (che contiene package.json, yarn.lock, ecc.)
+COPY webui/ ./webui/
+
+# Entriamo nella cartella del frontend
+WORKDIR /src/webui
+
+# --- MODIFICA FONDAMENTALE: USIAMO YARN ---
+# Il README dice che usa Yarn con "Offline mirror".
+# yarn install userà le dipendenze già presenti o le scaricherà se mancano.
+RUN yarn install
+
+# --- COMANDO DAL README ---
+# Il README dice: "yarn run build-prod" per la produzione.
+RUN yarn run build-prod
+
+# STAGE 2: Production (Nginx)
+FROM nginx:alpine
+
+# Copiamo i file compilati.
+# Vite di solito crea la cartella "dist".
+COPY --from=builder /src/webui/dist /usr/share/nginx/html
+
+# Espone la porta 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

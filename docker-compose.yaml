@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  # --- BACKEND ---
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: wasa-backend
+    ports:
+      - "3000:3000"
+    # Simulazione rigida dell'utente
+    user: "1000:1000"
+    volumes:
+
+      # Il DB verrà creato dentro questo volume gestito da Docker,
+      # lasciando la  cartella di progetto pulita.
+      - wasa_db_data:/app
+    environment:
+      # (Opzionale) Se il tuo codice lo supporta, forza il percorso qui.
+      # Altrimenti il codice scriverà in /app/scheduler_v2.db che è nel volume.
+      - API_DB_PATH=/app/scheduler_v2.db
+    restart: unless-stopped
+
+  # --- FRONTEND ---
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: wasa-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# Definizione del volume (lo spazio di archiviazione gestito da Docker)
+volumes:
+  wasa_db_data:
