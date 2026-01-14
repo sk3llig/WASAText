@@ -17,12 +17,22 @@ type User struct {
 }
 
 type Conversation struct {
-	ID       string
-	Name     string // Vuoto per chat 1-to-1
-	IsGroup  bool
-	PhotoURL string
+	// Campi che esistono nella tabella del DB
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	IsGroup  bool   `json:"is_group"`
+	PhotoURL string `json:"photo_url"`
 
-	CreatorID string // Essenziale per sapere chi può rimuovere i membri
+	// CreatorID serve internamente, ma spesso non si manda al frontend nella lista.
+	// Se ti serve, tienilo, ma aggiungi il tag json se vuoi che il frontend lo veda.
+	CreatorID string `json:"creator_id,omitempty"`
+
+	// --- CAMPI "CALCOLATI" (Non esistono nella tabella conversations, ma servono alla Struct) ---
+	// Go deve sapere che questi campi esistono per poterci mettere dentro
+	// i risultati delle query che abbiamo scritto prima.
+	LastMessage     string    `json:"last_message"`
+	LastMessageTime time.Time `json:"last_message_time"`
+	UnreadCount     int       `json:"unread_count"`
 }
 
 // NUOVA STRUCT REACTION

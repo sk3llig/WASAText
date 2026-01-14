@@ -1,6 +1,5 @@
 <template>
 	<div class="col-md-8 col-lg-9 d-flex flex-column bg-white h-100 position-relative">
-
 		<div v-if="activeConv" class="d-flex flex-column h-100">
 			<div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center shadow-sm z-10">
 				<div class="d-flex align-items-center">
@@ -310,15 +309,94 @@ export default {
 	}
 }
 </script>
-
 <style scoped>
-.bg-chat { background-color: #f0f2f5; }
-.msg-bubble { max-width: 75%; border-radius: 15px; }
-.my-msg { border-top-right-radius: 0; }
-.other-msg { border-top-left-radius: 0; }
-.object-fit-cover { object-fit: cover; }
-.hover-bg:hover { background-color: #e9ecef; }
+/* SFONDO AREA CHAT (Ghiaccio pulito) */
+.bg-chat {
+	background-color: #f5f7fb;
+	background-image: radial-gradient(#e6e9ef 1px, transparent 1px);
+	background-size: 20px 20px; /* Trama puntinata sottile */
+}
 
+/* BOLLA MESSAGGIO GENERICA */
+/* BOLLA MESSAGGIO GENERICA (Migliorata) */
+.msg-bubble {
+	/* 1. Più larghe verso il centro */
+	max-width: 80%; /* Prima era 70%, ora occupa più spazio orizzontale */
+	min-width: 120px; /* Evita che i messaggi corti siano minuscoli */
+
+	/* 2. Più grandi e spaziose */
+	padding: 12px 20px !important; /* Più aria attorno al testo */
+	border-radius: 20px;
+	font-size: 1rem; /* Testo leggibile */
+	line-height: 1.5;
+
+	/* 3. FIX FONDAMENTALE: Impedisce al testo di uscire */
+	word-wrap: break-word;      /* Spezza le parole normali a capo */
+	overflow-wrap: break-word;  /* Standard moderno */
+	word-break: break-word;     /* Spezza anche stringhe lunghissime senza spazi (es. link o "hahaha" infiniti) */
+
+	box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* Ombra leggermente più marcata */
+	border: none !important;
+}
+
+/* I MIEI MESSAGGI (Stile Logo: Gradiente Blu) */
+.my-msg {
+	background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%);
+	color: white;
+	border-top-right-radius: 2px; /* Angolo "speech" */
+}
+
+/* MESSAGGI ALTRUI (Bianco pulito) */
+.other-msg {
+	background-color: #ffffff;
+	color: #1a1d21;
+	border: 1px solid #eef0f3 !important;
+	border-top-left-radius: 2px; /* Angolo "speech" */
+}
+
+/* BARRA DI INPUT (Rotonda e moderna) */
+.form-control {
+	background-color: #f5f7fb;
+	border: 1px solid #eef0f3;
+	border-radius: 25px;
+	padding-left: 20px;
+}
+.form-control:focus {
+	background-color: #fff;
+	box-shadow: 0 0 0 3px rgba(50, 130, 184, 0.1);
+	border-color: #3282b8;
+}
+
+/* BOTTONE INVIA (Cerchio Blu) */
+.btn-primary {
+	background-color: #0f4c75;
+	border: none;
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	transition: transform 0.1s;
+}
+.btn-primary:hover {
+	background-color: #0b3c5d;
+	transform: scale(1.05);
+}
+
+/* BOTTONI SECONDARI (Graffetta, Foto) */
+.btn-outline-secondary {
+	border: none;
+	color: #6c757d;
+	transition: color 0.2s;
+}
+.btn-outline-secondary:hover {
+	background: transparent;
+	color: #3282b8;
+}
+
+/* LE REAZIONI (Emoji Picker) */
 .emoji-picker {
 	position: absolute;
 	bottom: 100%;
@@ -326,10 +404,10 @@ export default {
 	min-width: 280px;
 	animation: fadeIn 0.2s ease-out;
 }
-
 .picker-right { right: 0; left: auto; }
 .picker-left { left: 0; right: auto; }
 
+/* MODALE REAZIONI (Fix click) */
 .modal-backdrop {
 	position: fixed;
 	top: 0; left: 0; width: 100%; height: 100%;
@@ -339,6 +417,10 @@ export default {
 	align-items: center;
 	justify-content: center;
 }
+
+/* IMMAGINI COVER */
+.object-fit-cover { object-fit: cover; }
+.hover-bg:hover { background-color: #e9ecef; }
 
 @keyframes fadeIn {
 	from { opacity: 0; transform: translateY(10px); }

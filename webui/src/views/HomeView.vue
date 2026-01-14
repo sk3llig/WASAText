@@ -1,72 +1,55 @@
 <template>
-  <div class="container-fluid vh-100 d-flex flex-column overflow-hidden p-0">
-    <GroupInfoModal
-      v-if="showGroupInfoModal && activeConv"
-      :group-id="activeConv.id"
-      :current-name="activeConv.name"
-      @close="showGroupInfoModal = false"
-      @name-updated="loadConversations"
-    />
+	<div class="container-fluid p-0 d-flex flex-column main-layout">
 
-    <NavBar
-      :my-username="myUsername"
-      :my-photo="myPhoto"
-      @logout="logout"
-      @open-profile="showProfileModal = true"
-    />
+		<GroupInfoModal v-if="showGroupInfoModal && activeConv" :group-id="activeConv.id" :current-name="activeConv.name" @close="showGroupInfoModal = false" @name-updated="loadConversations" />
+		<ProfileModal v-if="showProfileModal" :my-username="myUsername" :my-id="myId" :my-photo="myPhoto" @close="showProfileModal = false" @update:myUsername="myUsername = $event" @update-photo="uploadPhoto" />
+		<NewChatModal v-if="showChatModal" :error-msg="chatModalError" @close="showChatModal = false" @create-private="startPrivateChat" @create-group="startGroupChat" />
+		<ForwardModal v-if="showForwardModal" @close="showForwardModal = false" @forward-to="handleForward" />
 
-    <div class="row flex-grow-1 g-0 overflow-hidden">
-      <ChatSidebar
-        :conversations="conversations"
-        :active-conv-id="activeConv ? activeConv.id : null"
-        @select-chat="selectConversation"
-        @open-new-chat="showChatModal = true"
-        @delete-chat="deleteConversation"
-      />
+		<NavBar :my-username="myUsername" :my-photo="myPhoto" @logout="logout" @open-profile="showProfileModal = true" class="flex-shrink-0" />
 
-      <ChatWindow
-        :active-conv="activeConv"
-        :messages="messages"
-        :my-username="myUsername"
-        @send-message="sendMessage"
-        @send-image="handleImageUpload"
-        @update-group-photo="handleGroupPhotoUpdate"
-        @leave-group="leaveGroup"
-        @add-reaction="addReaction"
-        @remove-reaction="removeReaction"
-        @delete-message="deleteMessage"
-        @open-group-info="showGroupInfoModal = true"
-        @forward-message="openForwardModal"
-		@send-composite-message="handleCompositeMessage"
-		@mark-as-read="markAsReadAPI"
-      />
-    </div>
+		<div class="row g-0 flex-grow-1 overflow-hidden content-area">
+			<ChatSidebar
+				:conversations="conversations"
+				:active-conv-id="activeConv ? activeConv.id : null"
+				:my-id="myId"  @select-chat="selectConversation"
+				@open-new-chat="showChatModal = true"
+				@delete-chat="deleteConversation"
+			/>
 
-	  <ProfileModal
-		  v-if="showProfileModal"
-		  :my-username="myUsername"
-		  :my-id="myId"
-		  :my-photo="myPhoto"
-		  @close="showProfileModal = false"
-		  @update:myUsername="myUsername = $event"
-		  @update-photo="uploadPhoto"
-	  />
-
-	  <NewChatModal
-		  v-if="showChatModal"
-		  :error-msg="chatModalError"    @close="showChatModal = false"
-		  @create-private="startPrivateChat"
-		  @create-group="startGroupChat"
-	  />
-
-    <ForwardModal
-      v-if="showForwardModal"
-      @close="showForwardModal = false"
-      @forward-to="handleForward"
-    />
-  </div>
+			<ChatWindow
+				:active-conv="activeConv"
+				:messages="messages"
+				:my-username="myUsername"
+				@send-message="sendMessage"
+				@send-image="handleImageUpload"
+				@update-group-photo="handleGroupPhotoUpdate"
+				@leave-group="leaveGroup"
+				@add-reaction="addReaction"
+				@remove-reaction="removeReaction"
+				@delete-message="deleteMessage"
+				@open-group-info="showGroupInfoModal = true"
+				@forward-message="openForwardModal"
+				@send-composite-message="handleCompositeMessage"
+				@mark-as-read="markAsReadAPI"
+			/>
+		</div>
+	</div>
 </template>
 
+<style scoped>
+/* --- FIX PER ZOOM E LAYOUT --- */
+.main-layout {
+	height: 100vh;      /* Forza l'altezza esatta della finestra */
+	overflow: hidden;   /* Impedisce lo scroll della pagina intera */
+	background-color: #1a1d21; /* Sfondo scuro di sicurezza */
+}
+
+.content-area {
+	height: 100%;       /* Occupa tutto lo spazio sotto la navbar */
+	position: relative;
+}
+</style>
 <script>
 import axios from '../services/axios';
 // Importazione Componenti
@@ -103,9 +86,9 @@ export default {
     await this.loadMyProfile();
     await this.loadConversations();
     this.pollInterval = setInterval(() => {
-      this.loadConversations();
-      if (this.activeConv) this.loadMessages();
-    }, 2000);
+		 this.loadConversations();
+		if (this.activeConv) this.loadMessages();
+    }, 4000);
   },
   beforeUnmount() { clearInterval(this.pollInterval); },
 
@@ -113,7 +96,7 @@ export default {
     // --- LOGICA DATI ---
 	  // In HomeView.vue
 		  async markAsReadAPI(conversation) {
-			  console.log("Lettura implicita gestita dal backend al prossimo refresh");
+			  //console.log("Lettura implicita gestita dal backend al prossimo refresh");
 		  },
 		  // ...
 

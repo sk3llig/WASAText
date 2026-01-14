@@ -107,7 +107,7 @@ func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	// Recupera dal DB
+	// 1. Recupera dal DB (ora dbConvs contiene LastMessage, LastMessageTime e UnreadCount)
 	dbConvs, err := rt.db.GetConversationsByUser(userID)
 	if err != nil {
 		rt.baseLogger.WithError(err).Error("Error fetching conversations")
@@ -115,7 +115,7 @@ func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	// Converti
+	// 2. Converti per la risposta API
 	var res ConversationsList
 	res.Conversations = make([]Conversation, 0)
 
@@ -124,11 +124,17 @@ func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, _ 
 			ID:       c.ID,
 			IsGroup:  c.IsGroup,
 			PhotoURL: c.PhotoURL,
+			// --- AGGIUNGI QUESTE 3 RIGHE: Copiamo i dati dal DB alla risposta ---
+			LastMessage:     c.LastMessage,
+			LastMessageTime: c.LastMessageTime,
+			UnreadCount:     c.UnreadCount,
 		}
+
 		if c.Name != "" {
 			nameCopy := c.Name
 			apiC.Name = &nameCopy
 		}
+
 		res.Conversations = append(res.Conversations, apiC)
 	}
 
