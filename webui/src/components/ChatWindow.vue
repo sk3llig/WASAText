@@ -29,8 +29,20 @@
 								<img :src="msg.attachments[0]" class="img-fluid rounded" style="max-height: 200px;">
 							</div>
 							<div v-if="msg.content">{{ msg.content }}</div>
-							<small class="d-block text-end mt-1 opacity-75" style="font-size: 0.65rem;">{{ formatTime(msg.timestamp) }}</small>
+							<div class="d-flex justify-content-end align-items-center mt-1">
+								<small class="opacity-75 me-1" style="font-size: 0.65rem;">
+									{{ formatTime(msg.timestamp) }}
+								</small>
 
+								<div v-if="isMyMessage(msg)" class="lh-1">
+        <span v-if="msg.status === 'read'" class="text-info fw-bold" style="font-size: 0.8rem;">
+            ✓✓
+        </span>
+									<span v-else class="text-white-50 fw-bold" style="font-size: 0.8rem;">
+            ✓✓
+        </span>
+								</div>
+							</div>
 							<div v-if="msg.reactions && msg.reactions.length > 0" class="reaction-bar mt-2">
 								<div class="badge bg-light text-dark border rounded-pill shadow-sm d-inline-flex align-items-center px-2 py-1"
 									 style="cursor: pointer;"
@@ -137,7 +149,7 @@
 <script>
 export default {
 	props: ['activeConv', 'messages', 'myUsername'],
-	emits: ['send-message', 'send-image', 'send-composite-message', 'update-group-photo', 'leave-group', 'add-reaction', 'remove-reaction', 'delete-message','open-group-info','forward-message'],
+	emits: ['mark-as-read','send-message', 'send-image', 'send-composite-message', 'update-group-photo', 'leave-group', 'add-reaction', 'remove-reaction', 'delete-message','open-group-info','forward-message'],
 
 	data() {
 		return {
@@ -188,7 +200,9 @@ export default {
 						// Se il messaggio non esiste più (es. cancellato), chiudiamo il modale
 						this.closeReactionDetails();
 					}
+
 				}
+				this.triggerReadReceipt();
 			},
 			deep: true
 		},
@@ -196,15 +210,23 @@ export default {
 		'activeConv.id'() {
 			this.initialScrollDone = false;
 			this.$nextTick(() => this.forceScrollToBottom());
+			this.triggerReadReceipt();
 		}
 
 	},
 
 	mounted() {
 		this.forceScrollToBottom();
+		this.triggerReadReceipt();
 	},
 
-	methods: {
+	methods: {triggerReadReceipt() {
+			// Se la chat è aperta e ci sono messaggi non miei,
+			// dico al padre (HomeView) di segnarli come letti.
+			if (this.activeConv && this.messages.length > 0) {
+				this.$emit('mark-as-read', this.activeConv);
+			}
+		},
 		handleSmartScroll(newMsgs, oldMsgs) {
 			const el = this.$refs.scrollContainer;
 			if (!el) return;

@@ -84,7 +84,8 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 
 // getConversationMessages (GET /conversations/:id/messages)
 func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	_, err := rt.extractUser(r)
+	// 1. Recuperiamo l'utente che sta facendo la richiesta
+	userID, err := rt.extractUser(r)
 	if err != nil {
 		rt.sendJSONError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -93,8 +94,17 @@ func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Reques
 	convID := ps.ByName("conversation_id")
 
 	// TODO: Controllare se userID fa parte della conversation (Sicurezza)
-	// es: if !rt.db.IsUserInConversation(convID, userID) { Error 403 }
 
+	// -----------------------------------------------------------
+	// 2. SIDE-EFFECT: AGGIORNAMENTO STATO (Spunte Blu)
+	// Usiamo la funzione MarkAsRead definita nell'interfaccia.
+	// Questo risolve l'errore "Unresolved reference 'Exec'".
+	// -----------------------------------------------------------
+	_ = rt.db.MarkAsRead(convID, userID)
+	// Ignoriamo l'errore (o lo logghiamo) per non bloccare il caricamento.
+	// -----------------------------------------------------------
+
+	// 3. Recuperiamo i messaggi dal DB
 	msgs, err := rt.db.GetMessagesByConversation(convID)
 	if err != nil {
 		rt.baseLogger.WithError(err).Error("Error getting messages")
@@ -102,22 +112,17 @@ func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Mappatura DB -> API
-	// Mappatura DB -> API
+	// 4. Mappatura DB -> API
 	var res MessagesList
 	res.Messages = make([]Message, 0)
 
 	for _, m := range msgs {
 
-		// 1. Convertiamo le reazioni dal formato Database al formato API
-		// (Il DB ci dà "ReactionSimple", l'API vuole "Reaction" con l'oggetto User)
 		var apiReactions []Reaction
-
 		if m.Reactions != nil {
 			for _, r := range m.Reactions {
 				apiReactions = append(apiReactions, Reaction{
 					Emoji: r.Emoji,
-					// Creiamo l'oggetto User usando il nome che abbiamo recuperato
 					User: User{
 						Name: r.UserName,
 					},
@@ -125,25 +130,22 @@ func (rt *_router) getConversationMessages(w http.ResponseWriter, r *http.Reques
 			}
 		}
 
-		// 2. Costruiamo il messaggio finale
 		res.Messages = append(res.Messages, Message{
 			ID:             m.ID,
 			ConversationID: m.ConversationID,
-
-			// Mappatura Sender (già presente e corretta)
 			Sender: User{
 				ID:   m.SenderID,
 				Name: m.SenderName,
 			},
-
 			Timestamp:   m.Timestamp,
 			Content:     m.Content,
 			Type:        m.Type,
 			Attachments: m.Attachments,
 			ReplyTo:     m.ReplyTo,
-			Status:      "read",
 
-			// 3. ECCO IL PEZZO CHE MANCAVA!
+			// Ora m.Status viene letto correttamente dalla struct del DB
+			Status: m.Status,
+
 			Reactions: apiReactions,
 		})
 	}

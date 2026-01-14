@@ -38,6 +38,7 @@
         @open-group-info="showGroupInfoModal = true"
         @forward-message="openForwardModal"
 		@send-composite-message="handleCompositeMessage"
+		@mark-as-read="markAsReadAPI"
       />
     </div>
 
@@ -110,6 +111,12 @@ export default {
 
   methods: {
     // --- LOGICA DATI ---
+	  // In HomeView.vue
+		  async markAsReadAPI(conversation) {
+			  console.log("Lettura implicita gestita dal backend al prossimo refresh");
+		  },
+		  // ...
+
     async loadMyProfile() {
       try {
         let res = await axios.get('/me');

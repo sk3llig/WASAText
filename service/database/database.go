@@ -41,7 +41,7 @@ type Message struct {
 	Type           string    `json:"type"`
 	Attachments    []string  `json:"attachments"`
 	ReplyTo        string    `json:"reply_to,omitempty"`
-
+	Status         string
 	// UNICA AGGIUNTA ALLA STRUCT:
 	Reactions []ReactionSimple `json:"reactions"`
 }
@@ -74,6 +74,7 @@ type AppDatabase interface {
 	GetMessagesByConversation(convID string) ([]Message, error)
 	GetMessageByID(msgID string) (Message, error)
 	DeleteMessage(convID, msgID, userID string) error
+	MarkAsRead(conversationID string, userID string) error
 
 	// --- GROUPS ---
 	AddToGroup(groupID string, userID string) error
@@ -151,6 +152,7 @@ func New(db *sql.DB) (*appdbimpl, error) {
 		type TEXT NOT NULL,
 		attachments TEXT,
 		reply_to TEXT,
+		status TEXT NOT NULL DEFAULT 'received',
 		FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
 		FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL
 	);`)

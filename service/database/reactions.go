@@ -26,8 +26,7 @@ func (db *appdbimpl) GetMessageReactionsList(msgID string) ([]ReactionDetail, er
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
+	defer func() { _ = rows.Close() }()
 	var results []ReactionDetail
 
 	for rows.Next() {

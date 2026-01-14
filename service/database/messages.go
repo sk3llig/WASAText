@@ -60,25 +60,24 @@ func (db *appdbimpl) GetMessageByID(msgID string) (Message, error) {
 
 // GetMessagesByConversation recupera la cronologia con JOIN per il nome utente
 func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error) {
-	// 1. Query principale (Messaggi)
+	// 1. Query principale
+	// HO AGGIUNTO 'm.status' alla fine della lista dei campi
 	query := `
        SELECT
           m.id, m.conversation_id, m.sender_id, u.name,
-          m.content, m.timestamp, m.type, m.attachments, m.reply_to
+          m.content, m.timestamp, m.type, m.attachments, m.reply_to,
+          m.status
        FROM messages m
        LEFT JOIN users u ON m.sender_id = u.id
        WHERE m.conversation_id = ?
        ORDER BY m.timestamp ASC
     `
-	// Nota: Ho messo ASC (dal più vecchio al più nuovo) che è standard per le chat.
-	// Se preferisci il contrario, rimetti DESC.
 
 	rows, err := db.c.Query(query, convID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
+	defer func() { _ = rows.Close() }()
 	var res []Message
 
 	for rows.Next() {
@@ -87,18 +86,39 @@ func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error)
 		var replyToSql interface{}
 
 		// 2. Lettura dati base
-		err = rows.Scan(&m.ID, &m.ConversationID, &m.SenderID, &m.SenderName, &m.Content, &m.Timestamp, &m.Type, &attachmentsString, &replyToSql)
+		// HO AGGIUNTO '&m.Status' alla fine, rispettando l'ordine della query
+		err = rows.Scan(
+			&m.ID,
+			&m.ConversationID,
+			&m.SenderID,
+			&m.SenderName,
+			&m.Content,
+			&m.Timestamp,
+			&m.Type,
+			&attachmentsString,
+			&replyToSql,
+			&m.Status, // <--- ECCOLO! Ora il campo viene letto dal DB
+		)
+
 		if err != nil {
 			return nil, err
 		}
 
+		// Gestione allegati JSON
 		_ = json.Unmarshal([]byte(attachmentsString), &m.Attachments)
+
+		// Gestione ReplyTo (che può essere NULL)
 		if replyToSql != nil {
-			m.ReplyTo = replyToSql.(string)
+			// A seconda del driver, potrebbe arrivare come []byte o string
+			switch v := replyToSql.(type) {
+			case string:
+				m.ReplyTo = v
+			case []uint8:
+				m.ReplyTo = string(v)
+			}
 		}
 
-		// --- 3. PEZZO MANCANTE: RECUPERO REAZIONI ---
-		// Senza questo blocco, m.Reactions rimane vuoto!
+		// 3. RECUPERO REAZIONI (Codice tuo originale, mantenuto intatto)
 		rQuery := `
            SELECT r.emoji, u.name
            FROM reactions r
@@ -107,21 +127,17 @@ func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error)
 
 		rRows, rErr := db.c.Query(rQuery, m.ID)
 
-		// Inizializziamo come slice vuota, così non è mai 'null' nel JSON
 		var currentReactions = []ReactionSimple{}
 
 		if rErr == nil {
 			for rRows.Next() {
 				var r ReactionSimple
-				// Leggiamo emoji e nome utente
 				if err := rRows.Scan(&r.Emoji, &r.UserName); err == nil {
 					currentReactions = append(currentReactions, r)
 				}
 			}
-			rRows.Close()
+			_ = rRows.Close()
 		}
-
-		// Assegniamo la lista trovata al messaggio
 		m.Reactions = currentReactions
 		// -------------------------------------------
 
@@ -150,6 +166,23 @@ func (db *appdbimpl) DeleteMessage(convID, msgID, userID string) error {
 	if affected == 0 {
 		// Se 0 righe, o il messaggio non esiste o l'utente non è l'autore
 		return errors.New("message not found or user not authorized")
+	}
+
+	return nil
+}
+func (db *appdbimpl) MarkAsRead(conversationID string, userID string) error {
+	// Eseguiamo l'aggiornamento
+	_, err := db.c.Exec(`
+        UPDATE messages
+        SET status = 'read'
+        WHERE conversation_id = ?
+          AND sender_id != ?
+          AND status = 'received'`,
+		conversationID, userID)
+
+	if err != nil {
+		// Se c'è un errore SQL, stampalo rosso in faccia
+		return err
 	}
 
 	return nil
