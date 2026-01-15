@@ -57,7 +57,7 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, _ 
 		userObj, err := rt.db.GetUserByName(pID)
 		if err != nil {
 			// Non è né un ID né un Nome valido -> ERRORE
-			//rt.baseLogger.WithError(err).Error("User not found by name or ID")
+			// rt.baseLogger.WithError(err).Error("User not found by name or ID")
 			rt.sendJSONError(w, http.StatusBadRequest, "User not found: "+pID)
 			return
 		}

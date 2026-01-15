@@ -136,12 +136,19 @@ func (db *appdbimpl) GetMessagesByConversation(convID string) ([]Message, error)
 					currentReactions = append(currentReactions, r)
 				}
 			}
+			// 1. Controllo rows.Err()
+			if err = rows.Err(); err != nil {
+				return nil, err
+			}
 			_ = rRows.Close()
 		}
 		m.Reactions = currentReactions
 		// -------------------------------------------
 
 		res = append(res, m)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 	return res, nil
 }

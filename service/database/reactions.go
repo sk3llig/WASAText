@@ -40,6 +40,9 @@ func (db *appdbimpl) GetMessageReactionsList(msgID string) ([]ReactionDetail, er
 
 		results = append(results, r)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return results, nil
 }

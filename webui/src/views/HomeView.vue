@@ -96,7 +96,7 @@ export default {
     // --- LOGICA DATI ---
 	  // In HomeView.vue
 		  async markAsReadAPI(conversation) {
-			  //console.log("Lettura implicita gestita dal backend al prossimo refresh");
+			  // console.log("Lettura implicita gestita dal backend al prossimo refresh");
 		  },
 		  // ...
 

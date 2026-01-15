@@ -92,6 +92,9 @@ GROUP BY c.id`
 
 		res = append(res, c)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	// Inserisci questo prima di 'return res, nil' nella funzione del DB
 	sort.Slice(res, func(i, j int) bool {
 		// Se una chat non ha messaggi, la mettiamo in fondo

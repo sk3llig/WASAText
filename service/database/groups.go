@@ -56,6 +56,9 @@ func (db *appdbimpl) GetGroupMembers(groupID string) ([]string, error) {
 		}
 		members = append(members, uid)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return members, nil
 }
 
